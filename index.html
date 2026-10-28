@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora do Custo Invisível das Despesas | Caju</title>
+<meta name="description" content="Descubra quanto sua empresa perde por ano mantendo o processo de despesas manual.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #2B2521;
+    --bg-blob: #4A2F24;
+    --orange: #FF5A2E;
+    --orange-dark: #D2551F;
+    --cream: #FFF1E6;
+    --cream-border: #F0C9B4;
+    --white: #FFFFFF;
+    --text: #2B2521;
+    --text-muted: #5B5049;
+    --text-subtle: #8A7F78;
+    --line: #D8CCC4;
+    --green: #0F7A5C;
+    --error: #C62828;
+    --radius: 20px;
+    --font: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--white);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .app {
+    position: relative;
+    overflow: hidden;
+    min-height: 640px;
+    padding: 48px 16px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .blob { position: absolute; border-radius: 50%; background: var(--bg-blob); pointer-events: none; }
+  .blob--a { width: 420px; height: 420px; top: -160px; right: -140px; }
+  .blob--b { width: 300px; height: 300px; bottom: -150px; left: -120px; }
+  .container { position: relative; z-index: 1; width: 100%; max-width: 720px; }
+
+  .screen { display: none; animation: fade .35s ease; }
+  .screen.is-active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .overline {
+    color: var(--orange); font-size: 12px; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase; margin: 0 0 16px;
+  }
+  h1 { font-size: clamp(30px, 5.5vw, 46px); line-height: 1.15; font-weight: 700; margin: 0 0 20px; }
+  h1 .hl { color: var(--orange); }
+  .lead { font-size: clamp(16px, 2.4vw, 19px); color: #E9DFD8; margin: 0 0 32px; max-width: 560px; }
+
+  .bullets { list-style: none; padding: 0; margin: 0 0 36px; display: grid; gap: 14px; }
+  .bullets li { display: flex; gap: 14px; align-items: center; color: #E9DFD8; font-size: 15px; }
+  .icon-dot {
+    flex: none; width: 40px; height: 40px; border-radius: 50%;
+    background: var(--orange); display: grid; place-items: center;
+  }
+  .icon-dot svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: var(--font); font-weight: 600; font-size: 16px;
+    padding: 16px 32px; border-radius: 999px; border: 2px solid transparent;
+    cursor: pointer; text-decoration: none; transition: background .2s, transform .2s, color .2s;
+    line-height: 1.2;
+  }
+  .btn--primary { background: var(--orange); color: #fff; }
+  .btn--primary:hover { background: var(--orange-dark); transform: translateY(-1px); }
+  .btn--ghost { background: transparent; color: var(--text-muted); border-color: var(--line); }
+  .btn--ghost:hover { border-color: var(--orange); color: var(--orange); }
+  .btn:focus-visible, input:focus-visible, .range-opt input:focus-visible + span { outline: 3px solid #FFC9AE; outline-offset: 2px; }
+  .btn[disabled] { opacity: .6; cursor: progress; }
+  .note { font-size: 13px; color: var(--text-subtle); margin-top: 14px; }
+
+  .card {
+    background: var(--white); color: var(--text);
+    border-radius: var(--radius); padding: clamp(24px, 5vw, 40px);
+    box-shadow: 0 20px 48px rgba(0,0,0,.28);
+  }
+  .card h2 { font-size: clamp(22px, 3.6vw, 28px); line-height: 1.25; margin: 0 0 6px; }
+  .card .sub { color: var(--text-muted); font-size: 15px; margin: 0 0 28px; }
+
+  .field { background: var(--cream); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid transparent; }
+  .field.has-error { border-color: var(--error); }
+  .field-head { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+  .num { flex: none; color: var(--orange); font-weight: 700; font-size: 14px; margin-top: 2px; min-width: 22px; }
+  .field label.q, .field legend.q { font-weight: 600; font-size: 16px; line-height: 1.35; display: block; padding: 0; }
+  .help { display: block; color: var(--text-muted); font-size: 13.5px; font-weight: 400; margin-top: 4px; }
+  .tag-opt {
+    display: inline-block; font-size: 11.5px; font-weight: 600; color: var(--orange);
+    border: 1px solid var(--orange); border-radius: 999px; padding: 1px 10px; margin-left: 6px; vertical-align: 2px;
+  }
+  .input-wrap { display: flex; align-items: center; gap: 10px; padding-left: 36px; }
+  .input-wrap input {
+    width: 150px; font-family: var(--font); font-size: 18px; font-weight: 600; color: var(--text);
+    padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--cream-border); background: #fff;
+    -moz-appearance: textfield;
+  }
+  .input-wrap input::-webkit-outer-spin-button, .input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .input-wrap input:focus { border-color: var(--orange); outline: none; }
+  .unit { color: var(--text-muted); font-size: 15px; }
+  .err { display: none; color: var(--error); font-size: 13px; margin: 8px 0 0 36px; }
+  .field.has-error .err { display: block; }
+
+  fieldset.field { margin: 0 0 16px; min-width: 0; }
+  fieldset.field legend.q { float: left; width: 100%; }
+  .ranges { clear: both; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding-left: 36px; }
+  .range-opt { position: relative; cursor: pointer; }
+  .range-opt input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .range-opt span {
+    display: flex; align-items: center; justify-content: center; text-align: center; min-height: 52px;
+    padding: 10px 8px; border-radius: 12px; background: #fff; border: 1.5px solid var(--cream-border);
+    font-size: 14px; font-weight: 600; color: var(--text); transition: all .15s;
+  }
+  .range-opt:hover span { border-color: var(--orange); }
+  .range-opt input:checked + span { background: var(--orange); border-color: var(--orange); color: #fff; }
+
+  .form-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 28px; }
+
+  /* Resultado */
+  .r-lead { color: var(--text-muted); font-size: 16px; margin: 0 0 4px; }
+  .r-total { color: var(--orange); font-weight: 700; font-size: clamp(36px, 7.5vw, 56px); line-height: 1.1; margin: 0 0 10px; word-break: break-word; }
+  .r-total small { font-size: .5em; font-weight: 600; }
+  .r-month { font-size: 16px; color: var(--text-muted); font-style: italic; margin: 0 0 24px; }
+  .r-month strong { font-style: normal; color: var(--text); }
+  .divider { height: 1px; background: var(--line); margin: 0 0 20px; }
+  .r-items { display: grid; gap: 14px; margin-bottom: 24px; }
+  .r-item { display: flex; gap: 14px; align-items: center; font-size: 15px; color: var(--text-muted); }
+  .r-item strong { color: var(--text); }
+  .r-item .icon-dot--green { background: var(--green); }
+  .r-item .val-green { color: var(--green); }
+  .breakdown { background: var(--cream); border-radius: 14px; padding: 16px 20px; margin-bottom: 28px; font-size: 14px; }
+  .breakdown summary { cursor: pointer; font-weight: 600; color: var(--text); }
+  .breakdown table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .breakdown td { padding: 6px 0; border-bottom: 1px solid var(--cream-border); color: var(--text-muted); vertical-align: top; }
+  .breakdown td:last-child { text-align: right; color: var(--text); font-weight: 600; white-space: nowrap; padding-left: 12px; }
+  .breakdown tr:last-child td { border-bottom: 0; }
+  .breakdown .disclaimer { margin: 12px 0 0; font-size: 12.5px; color: var(--text-subtle); }
+  .r-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .r-actions .btn--primary { flex: 1 1 240px; }
+  .r-actions .btn--ghost { flex: 1 1 180px; }
+  .link-btn { background: none; border: 0; color: var(--text-subtle); font-family: var(--font); font-size: 14px; text-decoration: underline; cursor: pointer; margin-top: 18px; padding: 0; }
+  .link-btn:hover { color: var(--orange); }
+
+  @media (max-width: 560px) {
+    .app { padding: 32px 16px; }
+    .ranges { grid-template-columns: repeat(2, 1fr); padding-left: 0; }
+    .input-wrap { padding-left: 0; }
+    .err { margin-left: 0; }
+    .form-actions .btn { width: 100%; }
+    .form-actions { flex-direction: column-reverse; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="blob blob--a" aria-hidden="true"></div>
+  <div class="blob blob--b" aria-hidden="true"></div>
+  <main class="container">
+
+    <!-- 1. Tela inicial -->
+    <section class="screen is-active" id="screen-intro" aria-labelledby="intro-title">
+      <p class="overline">Do risco ao número</p>
+      <h1 id="intro-title">Quanto sua empresa perde por ano mantendo o processo de despesas <span class="hl">manual</span>?</h1>
+      <p class="lead">Um número, não uma sensação. Responda 4 perguntas rápidas e veja, em reais, o custo invisível da gestão manual de despesas na sua empresa.</p>
+      <ul class="bullets">
+        <li><span class="icon-dot" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>Leva menos de 2 minutos</li>
+        <li><span class="icon-dot" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>Só 4 perguntas, sem jargão financeiro</li>
+        <li><span class="icon-dot" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg></span>Resultado na hora, com download em PDF</li>
+      </ul>
+      <button type="button" class="btn btn--primary" id="btn-start">Calcular meu custo invisível →</button>
+      <p class="note" style="color:#B9ADA5">Não pedimos nenhum dado pessoal. As respostas ficam só no seu navegador.</p>
+    </section>
+
+    <!-- 2. Formulário -->
+    <section class="screen" id="screen-form" aria-labelledby="form-title">
+      <form class="card" id="calc-form" novalidate>
+        <p class="overline" style="margin-bottom:8px">Calculadora do Custo Invisível</p>
+        <h2 id="form-title">4 perguntas, um número claro</h2>
+        <p class="sub">Responda com estimativas. Não precisa ser exato.</p>
+
+        <div class="field" id="f-pessoas">
+          <div class="field-head">
+            <span class="num">01</span>
+            <label class="q" for="pessoas">Quantas pessoas hoje cuidam da gestão de despesas?
+              <span class="help">Somando lançamento, aprovação e fechamento, tudo junto.</span>
+            </label>
+          </div>
+          <div class="input-wrap">
+            <input type="number" id="pessoas" name="pessoas" inputmode="numeric" min="1" max="1000" step="1" placeholder="Ex.: 3" aria-describedby="err-pessoas" required>
+            <span class="unit">pessoas</span>
+          </div>
+          <p class="err" id="err-pessoas" role="alert">Informe um número inteiro entre 1 e 1.000.</p>
+        </div>
+
+        <div class="field" id="f-horas">
+          <div class="field-head">
+            <span class="num">02</span>
+            <label class="q" for="horas">Quantas horas por mês cada uma dessas pessoas dedica a esse processo, em média?
+              <span class="help">Considere tudo: lançar, conferir, aprovar, cobrar comprovantes e fechar.</span>
+            </label>
+          </div>
+          <div class="input-wrap">
+            <input type="number" id="horas" name="horas" inputmode="numeric" min="1" max="220" step="1" placeholder="Ex.: 40" aria-describedby="err-horas" required>
+            <span class="unit">horas/mês por pessoa</span>
+          </div>
+          <p class="err" id="err-horas" role="alert">Informe um número inteiro entre 1 e 220 horas.</p>
+        </div>
+
+        <div class="field" id="f-retrabalho">
+          <div class="field-head">
+            <span class="num">03</span>
+            <label class="q" for="retrabalho">Dessas horas, quantas cada pessoa gasta corrigindo erros, glosas ou reembolsos contestados? <span class="tag-opt">Opcional</span>
+              <span class="help">Se não souber, pode deixar em branco.</span>
+            </label>
+          </div>
+          <div class="input-wrap">
+            <input type="number" id="retrabalho" name="retrabalho" inputmode="numeric" min="0" step="1" placeholder="Ex.: 8" aria-describedby="err-retrabalho">
+            <span class="unit">horas/mês por pessoa</span>
+          </div>
+          <p class="err" id="err-retrabalho" role="alert">Informe um número inteiro, menor ou igual às horas da pergunta 2.</p>
+        </div>
+
+        <fieldset class="field" id="f-custo">
+          <legend class="q"><span class="field-head" style="margin-bottom:14px"><span class="num">04</span><span>Qual o custo médio por hora dessas pessoas?
+            <span class="help">Uma estimativa já basta. Se tiver dúvida, divida o salário mensal por 160.</span></span></span>
+          </legend>
+          <div class="ranges">
+            <label class="range-opt"><input type="radio" name="custo" value="ate30"><span>Até R$&nbsp;30</span></label>
+            <label class="range-opt"><input type="radio" name="custo" value="30a60"><span>R$&nbsp;30 a 60</span></label>
+            <label class="range-opt"><input type="radio" name="custo" value="60a100"><span>R$&nbsp;60 a 100</span></label>
+            <label class="range-opt"><input type="radio" name="custo" value="mais100"><span>Mais de R$&nbsp;100</span></label>
+          </div>
+          <p class="err" id="err-custo" role="alert">Escolha uma faixa de custo por hora.</p>
+        </fieldset>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn--ghost" id="btn-back">← Voltar</button>
+          <button type="submit" class="btn btn--primary">Ver meu resultado →</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 3. Resultado -->
+    <section class="screen" id="screen-result" aria-labelledby="result-title" aria-live="polite">
+      <div class="card">
+        <p class="overline" style="margin-bottom:12px">Seu resultado</p>
+        <p class="r-lead" id="result-title">Seu processo manual de despesas pode estar custando</p>
+        <p class="r-total"><span id="r-total">R$ 0</span><small>/ano</small></p>
+        <p class="r-month">Isso equivale a <strong id="r-month">R$ 0</strong> por mês.</p>
+        <div class="divider"></div>
+        <div class="r-items">
+          <div class="r-item">
+            <span class="icon-dot" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+            <span>No total, isso representa <strong id="r-hours">0 horas</strong> do seu time por ano só nesse processo.</span>
+          </div>
+          <div class="r-item" id="r-rework-row">
+            <span class="icon-dot icon-dot--green" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+            <span>Desse total, <strong class="val-green" id="r-rework">R$ 0</strong> vêm só de correção de erros.</span>
+          </div>
+        </div>
+
+        <details class="breakdown">
+          <summary>Como chegamos nesse número</summary>
+          <table>
+            <tbody id="r-breakdown"></tbody>
+          </table>
+          <p class="disclaimer">Estimativa com base nas suas respostas. Para a faixa de custo por hora, usamos um valor de referência: até R$ 30 → R$ 25; R$ 30 a 60 → R$ 45; R$ 60 a 100 → R$ 80; mais de R$ 100 → R$ 120.</p>
+        </details>
+
+        <div class="r-actions">
+          <a class="btn btn--primary" id="btn-cta" href="#" target="_blank" rel="noopener">Gestão de Despesas →</a>
+          <button type="button" class="btn btn--ghost" id="btn-pdf">Baixar resultado em PDF</button>
+        </div>
+        <button type="button" class="link-btn" id="btn-redo">Refazer o cálculo</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ================= CONFIGURAÇÃO ================= */
+  var CONFIG = {
+    // TODO: trocar pelo link final da página de Gestão de Despesas.
+    ctaUrl: 'https://www.caju.com.br/gestao-de-despesas',
+    // Valor de referência (R$/hora) usado na conta para cada faixa.
+    custoHora: {
+      ate30:   { valor: 25,  rotulo: 'Até R$ 30' },
+      '30a60': { valor: 45,  rotulo: 'R$ 30 a 60' },
+      '60a100':{ valor: 80,  rotulo: 'R$ 60 a 100' },
+      mais100: { valor: 120, rotulo: 'Mais de R$ 100' }
+    },
+    limites: { pessoasMax: 1000, horasMax: 220 }
+  };
+
+  /* ================= CÁLCULO ================= */
+  // Fórmula do briefing (campos 2 e 3 são horas por pessoa):
+  //   horasOperacionais = horas − retrabalho
+  //   custoOperacional  = pessoas × horasOperacionais × custoHora × 12
+  //   custoRetrabalho   = pessoas × retrabalho × custoHora × 12  (só se o campo 3 for preenchido)
+  //   total             = custoOperacional + custoRetrabalho
+  function calcular(pessoas, horas, retrabalho, custoHora) {
+    var rt = retrabalho === null ? 0 : retrabalho;
+    var horasOperacionais = horas - rt;
+    var custoOperacional = pessoas * horasOperacionais * custoHora * 12;
+    var custoRetrabalho = pessoas * rt * custoHora * 12;
+    var total = custoOperacional + custoRetrabalho;
+    return {
+      horasOperacionais: horasOperacionais,
+      custoOperacional: custoOperacional,
+      custoRetrabalho: custoRetrabalho,
+      total: total,
+      mensal: total / 12,
+      horasAno: pessoas * horas * 12,
+      temRetrabalho: retrabalho !== null && retrabalho > 0
+    };
+  }
+  window.__calcular = calcular; // usado nos testes automatizados
+
+  /* ================= FORMATAÇÃO ================= */
+  var fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  var fmtNum = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
+  function brl(v) { return fmtBRL.format(Math.round(v)).replace(/ /g, ' '); }
+  function num(v) { return fmtNum.format(v); }
+
+  /* ================= NAVEGAÇÃO ================= */
+  var $ = function (id) { return document.getElementById(id); };
+  function show(id) {
+    ['screen-intro', 'screen-form', 'screen-result'].forEach(function (s) {
+      $(s).classList.toggle('is-active', s === id);
+    });
+    track('calc_view_' + id.replace('screen-', ''));
+    try { window.scrollTo({ top: 0 }); } catch (e) {}
+    notifyHeight();
+  }
+
+  /* Altura para o embed no Framer: o pai pode ouvir esta mensagem e ajustar o iframe. */
+  function notifyHeight() {
+    if (window.parent === window) return;
+    requestAnimationFrame(function () {
+      window.parent.postMessage({ type: 'caju-calc-height', height: document.documentElement.scrollHeight }, '*');
+    });
+  }
+  window.addEventListener('resize', notifyHeight);
+  if ('ResizeObserver' in window) new ResizeObserver(notifyHeight).observe(document.body);
+
+  /* Evento para tagueamento (GTM/dataLayer), se existir no contexto da página. */
+  function track(event, params) {
+    try {
+      var payload = Object.assign({ event: event }, params || {});
+      if (window.dataLayer) window.dataLayer.push(payload);
+      if (window.parent !== window) window.parent.postMessage({ type: 'caju-calc-event', payload: payload }, '*');
+    } catch (e) {}
+  }
+
+  /* ================= VALIDAÇÃO ================= */
+  function lerInteiro(input) {
+    var raw = input.value.trim();
+    if (raw === '') return { vazio: true, valor: null };
+    if (!/^\d+$/.test(raw)) return { vazio: false, valor: NaN };
+    return { vazio: false, valor: parseInt(raw, 10) };
+  }
+  function setErro(fieldId, on) { $(fieldId).classList.toggle('has-error', on); }
+
+  function validar() {
+    var ok = true, primeiroErro = null;
+    var p = lerInteiro($('pessoas'));
+    var pOk = !p.vazio && p.valor >= 1 && p.valor <= CONFIG.limites.pessoasMax;
+    setErro('f-pessoas', !pOk); if (!pOk) { ok = false; primeiroErro = primeiroErro || 'pessoas'; }
+
+    var h = lerInteiro($('horas'));
+    var hOk = !h.vazio && h.valor >= 1 && h.valor <= CONFIG.limites.horasMax;
+    setErro('f-horas', !hOk); if (!hOk) { ok = false; primeiroErro = primeiroErro || 'horas'; }
+
+    var r = lerInteiro($('retrabalho'));
+    var rOk = r.vazio || (!isNaN(r.valor) && r.valor >= 0 && (!hOk || r.valor <= h.valor));
+    setErro('f-retrabalho', !rOk); if (!rOk) { ok = false; primeiroErro = primeiroErro || 'retrabalho'; }
+
+    var c = document.querySelector('input[name="custo"]:checked');
+    setErro('f-custo', !c); if (!c) { ok = false; primeiroErro = primeiroErro || 'custo'; }
+
+    if (!ok) {
+      var alvo = primeiroErro === 'custo' ? document.querySelector('input[name="custo"]') : $(primeiroErro);
+      alvo.focus();
+      notifyHeight();
+      return null;
+    }
+    return { pessoas: p.valor, horas: h.valor, retrabalho: r.vazio ? null : r.valor, faixa: c.value };
+  }
+
+  /* ================= RESULTADO ================= */
+  var ultimo = null;
+
+  function render(inp) {
+    var faixa = CONFIG.custoHora[inp.faixa];
+    var res = calcular(inp.pessoas, inp.horas, inp.retrabalho, faixa.valor);
+    ultimo = { inp: inp, faixa: faixa, res: res };
+
+    $('r-total').textContent = brl(res.total);
+    $('r-month').textContent = brl(res.mensal);
+    $('r-hours').textContent = num(res.horasAno) + ' horas';
+    $('r-rework').textContent = brl(res.custoRetrabalho);
+    $('r-rework-row').style.display = res.temRetrabalho ? '' : 'none';
+
+    var linhas = [
+      ['Pessoas no processo', num(inp.pessoas)],
+      ['Horas por mês, por pessoa', num(inp.horas) + ' h'],
+      ['Horas de retrabalho por mês, por pessoa', inp.retrabalho === null ? 'não informado' : num(inp.retrabalho) + ' h'],
+      ['Horas operacionais por mês, por pessoa', num(res.horasOperacionais) + ' h'],
+      ['Custo por hora (faixa ' + faixa.rotulo + ')', brl(faixa.valor)],
+      ['Custo operacional/ano', brl(res.custoOperacional)],
+      ['Custo de retrabalho/ano', res.temRetrabalho ? brl(res.custoRetrabalho) : brl(0)],
+      ['Custo invisível total/ano', brl(res.total)]
+    ];
+    var tb = $('r-breakdown');
+    tb.innerHTML = '';
+    linhas.forEach(function (l) {
+      var tr = document.createElement('tr');
+      var a = document.createElement('td'); a.textContent = l[0];
+      var b = document.createElement('td'); b.textContent = l[1];
+      tr.appendChild(a); tr.appendChild(b); tb.appendChild(tr);
+    });
+
+    show('screen-result');
+    track('calc_result', {
+      calc_total: res.total, calc_faixa: inp.faixa,
+      calc_pessoas: inp.pessoas, calc_retrabalho_preenchido: inp.retrabalho !== null
+    });
+  }
+
+  /* ================= PDF ================= */
+  function baixarPDF() {
+    if (!ultimo) return;
+    if (!window.jspdf) { alert('Não foi possível gerar o PDF agora. Verifique sua conexão e tente novamente.'); return; }
+    var r = ultimo.res, inp = ultimo.inp, faixa = ultimo.faixa;
+    var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+    var W = 210, M = 18, y;
+    var ORANGE = [255, 90, 46], DARK = [43, 37, 33], MUTED = [91, 80, 73], GREEN = [15, 122, 92], CREAM = [255, 241, 230];
+
+    doc.setFillColor.apply(doc, DARK); doc.rect(0, 0, W, 52, 'F');
+    doc.setTextColor.apply(doc, ORANGE); doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+    doc.text('CAJU  •  DO RISCO AO NÚMERO', M, 18);
+    doc.setTextColor(255, 255, 255); doc.setFontSize(20);
+    doc.text('Calculadora do Custo Invisível', M, 30);
+    doc.text('das Despesas Corporativas', M, 39);
+
+    y = 70;
+    doc.setTextColor.apply(doc, MUTED); doc.setFont('helvetica', 'normal'); doc.setFontSize(12);
+    doc.text('Seu processo manual de despesas pode estar custando', M, y);
+    y += 14;
+    doc.setTextColor.apply(doc, ORANGE); doc.setFont('helvetica', 'bold'); doc.setFontSize(32);
+    doc.text(brl(r.total) + '/ano', M, y);
+    y += 11;
+    doc.setTextColor.apply(doc, MUTED); doc.setFont('helvetica', 'italic'); doc.setFontSize(12);
+    doc.text('Isso equivale a ' + brl(r.mensal) + ' por mês.', M, y);
+    y += 8;
+    doc.setDrawColor(216, 204, 196); doc.line(M, y, W - M, y);
+    y += 10;
+    doc.setFont('helvetica', 'normal'); doc.setTextColor.apply(doc, DARK);
+    doc.text('No total, isso representa ' + num(r.horasAno) + ' horas do seu time por ano só nesse processo.', M, y, { maxWidth: W - 2 * M });
+    if (r.temRetrabalho) {
+      y += 9;
+      doc.text('Desse total, ', M, y);
+      var x = M + doc.getTextWidth('Desse total, ');
+      doc.setFont('helvetica', 'bold'); doc.setTextColor.apply(doc, GREEN);
+      doc.text(brl(r.custoRetrabalho), x, y);
+      x += doc.getTextWidth(brl(r.custoRetrabalho));
+      doc.setFont('helvetica', 'normal'); doc.setTextColor.apply(doc, DARK);
+      doc.text(' vêm só de correção de erros.', x, y);
+    }
+
+    y += 14;
+    var linhas = [];
+    $('r-breakdown').querySelectorAll('tr').forEach(function (tr) {
+      linhas.push([tr.children[0].textContent, tr.children[1].textContent]);
+    });
+    var boxH = 14 + linhas.length * 8;
+    doc.setFillColor.apply(doc, CREAM); doc.roundedRect(M, y, W - 2 * M, boxH, 4, 4, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor.apply(doc, DARK);
+    doc.text('Como chegamos nesse número', M + 6, y + 9);
+    doc.setFontSize(10.5);
+    linhas.forEach(function (l, i) {
+      var ly = y + 18 + i * 8;
+      var last = i === linhas.length - 1;
+      doc.setFont('helvetica', last ? 'bold' : 'normal'); doc.setTextColor.apply(doc, last ? DARK : MUTED);
+      doc.text(l[0], M + 6, ly);
+      doc.setFont('helvetica', 'bold'); doc.setTextColor.apply(doc, DARK);
+      doc.text(l[1], W - M - 6, ly, { align: 'right' });
+    });
+    y += boxH + 10;
+
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(138, 127, 120);
+    var nota = 'Estimativa com base nas respostas informadas. Fórmula: custo operacional/ano = pessoas × horas operacionais × custo/hora × 12; ' +
+      'custo de retrabalho/ano = pessoas × horas de retrabalho × custo/hora × 12. Valores de referência por faixa de custo/hora: ' +
+      'até R$ 30 = R$ 25; R$ 30 a 60 = R$ 45; R$ 60 a 100 = R$ 80; mais de R$ 100 = R$ 120.';
+    doc.text(nota.replace(/×/g, 'x'), M, y, { maxWidth: W - 2 * M });
+    y += 20;
+
+    doc.setFillColor.apply(doc, ORANGE); doc.roundedRect(M, y, W - 2 * M, 22, 4, 4, 'F');
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+    doc.text('Próximo passo: conheça a Gestão de Despesas da Caju', M + 6, y + 9);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+    doc.textWithLink(CONFIG.ctaUrl, M + 6, y + 16, { url: CONFIG.ctaUrl });
+
+    doc.setTextColor(138, 127, 120); doc.setFontSize(8);
+    doc.text('Gerado em ' + new Date().toLocaleDateString('pt-BR') + '  •  Caju  •  Calculadora do Custo Invisível', M, 287);
+
+    doc.save('custo-invisivel-despesas-caju.pdf');
+    track('calc_download_pdf', { calc_total: r.total });
+  }
+
+  /* ================= EVENTOS ================= */
+  $('btn-cta').href = CONFIG.ctaUrl;
+  $('btn-start').addEventListener('click', function () { show('screen-form'); $('pessoas').focus({ preventScroll: true }); });
+  $('btn-back').addEventListener('click', function () { show('screen-intro'); });
+  $('btn-redo').addEventListener('click', function () { show('screen-form'); });
+  $('btn-pdf').addEventListener('click', baixarPDF);
+  $('btn-cta').addEventListener('click', function () { track('calc_click_cta'); });
+  $('calc-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var inp = validar();
+    if (inp) render(inp);
+  });
+  // Limpa o erro do campo assim que a pessoa corrige
+  ['pessoas', 'horas', 'retrabalho'].forEach(function (id) {
+    $(id).addEventListener('input', function () { setErro('f-' + id, false); });
+  });
+  document.querySelectorAll('input[name="custo"]').forEach(function (el) {
+    el.addEventListener('change', function () { setErro('f-custo', false); });
+  });
+
+  track('calc_view_intro');
+  notifyHeight();
+})();
+</script>
+</body>
+</html>
