@@ -1,0 +1,44 @@
+<!--
+  Cole este código no Framer: Site Settings → General → Custom Code → "End of <body> tag"
+  (ou só na página da LP, em Page Settings → Custom Code).
+
+  O que ele faz: a calculadora roda dentro de um iframe e não enxerga a URL nem os
+  cookies da LP. Este script lê as UTMs da URL da LP e o client id do Google Analytics
+  (cookie _ga) e entrega para a calculadora quando ela pedir.
+
+  ANTES DE PUBLICAR: troque CALC_ORIGIN pelo endereço onde a calculadora estiver
+  hospedada (só protocolo + domínio, sem barra no final). Ex.: https://calculadora-despesas-caju.vercel.app
+-->
+<script>
+(function () {
+  var CALC_ORIGIN = 'https://SEU-DOMINIO-DA-CALCULADORA';
+  var KEY = 'caju_calc_utms';
+
+  // UTMs da URL atual; se a pessoa navegou e a URL não tem mais UTMs, usa as da entrada.
+  var utms = {};
+  new URLSearchParams(location.search).forEach(function (v, k) {
+    if (/^utm_/i.test(k) && v) utms[k.toLowerCase()] = v;
+  });
+  try {
+    if (Object.keys(utms).length) sessionStorage.setItem(KEY, JSON.stringify(utms));
+    else utms = JSON.parse(sessionStorage.getItem(KEY) || '{}');
+  } catch (e) {}
+
+  function gaClientId() {
+    var m = document.cookie.match(/(?:^|;\s*)_ga=([^;]+)/);
+    if (!m) return '';
+    var p = decodeURIComponent(m[1]).split('.');
+    return p.length >= 4 ? p.slice(-2).join('.') : '';
+  }
+
+  window.addEventListener('message', function (e) {
+    if (e.origin !== CALC_ORIGIN || !e.data || e.data.type !== 'caju-calc-ready') return;
+    e.source.postMessage({
+      type: 'caju-calc-context',
+      utms: utms,
+      gaClientId: gaClientId(),
+      pageUrl: location.href
+    }, CALC_ORIGIN);
+  });
+})();
+</script>

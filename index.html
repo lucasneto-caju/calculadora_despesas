@@ -154,8 +154,36 @@
   .link-btn { background: none; border: 0; color: var(--text-subtle); font-family: var(--font); font-size: 14px; text-decoration: underline; cursor: pointer; margin-top: 18px; padding: 0; }
   .link-btn:hover { color: var(--orange); }
 
+  /* Seus dados */
+  .section-title { font-size: 18px; font-weight: 700; margin: 32px 0 4px; }
+  .section-sub { color: var(--text-muted); font-size: 14px; margin: 0 0 16px; }
+  .lead-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; background: var(--cream); border-radius: 16px; padding: 20px; }
+  .lf { min-width: 0; }
+  .lf--full { grid-column: 1 / -1; }
+  .lf > label, .lf > .lf-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .lf input[type=text], .lf input[type=email], .lf input[type=tel], .lf select {
+    width: 100%; font-family: var(--font); font-size: 15px; color: var(--text);
+    padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--cream-border); background: #fff;
+  }
+  .lf select {
+    -webkit-appearance: none; appearance: none; padding-right: 40px; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235B5049' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+  }
+  .lf select:invalid { color: var(--text-subtle); }
+  .lf input:focus, .lf select:focus { border-color: var(--orange); outline: none; }
+  .lf .err { margin-left: 0; }
+  .lf.has-error input, .lf.has-error select { border-color: var(--error); }
+  .lf.has-error .err { display: block; }
+  .yesno { display: flex; gap: 10px; }
+  .yesno .range-opt { flex: 1; }
+  .yesno .range-opt span { min-height: 46px; }
+  .privacy { font-size: 12.5px; color: var(--text-subtle); margin: 14px 0 0; }
+  .privacy a { color: var(--text-muted); }
+
   @media (max-width: 560px) {
     .app { padding: 32px 16px; }
+    .lead-grid { grid-template-columns: 1fr; padding: 16px; }
     .ranges { grid-template-columns: repeat(2, 1fr); padding-left: 0; }
     .input-wrap { padding-left: 0; }
     .err { margin-left: 0; }
@@ -181,7 +209,6 @@
         <li><span class="icon-dot" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg></span>Resultado na hora, com download em PDF</li>
       </ul>
       <button type="button" class="btn btn--primary" id="btn-start">Calcular meu custo invisível →</button>
-      <p class="note" style="color:#B9ADA5">Não pedimos nenhum dado pessoal. As respostas ficam só no seu navegador.</p>
     </section>
 
     <!-- 2. Formulário -->
@@ -246,6 +273,58 @@
           <p class="err" id="err-custo" role="alert">Escolha uma faixa de custo por hora.</p>
         </fieldset>
 
+        <h3 class="section-title">Seus dados</h3>
+        <p class="section-sub">Para liberar seu resultado.</p>
+        <div class="lead-grid">
+          <div class="lf lf--full" id="f-nome">
+            <label for="nome">Nome completo</label>
+            <input type="text" id="nome" name="nome" autocomplete="name" maxlength="120" aria-describedby="err-nome" required>
+            <p class="err" id="err-nome" role="alert">Informe seu nome e sobrenome.</p>
+          </div>
+          <div class="lf" id="f-email">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" autocomplete="email" maxlength="160" placeholder="voce@empresa.com.br" aria-describedby="err-email" required>
+            <p class="err" id="err-email" role="alert">Informe um e-mail válido.</p>
+          </div>
+          <div class="lf" id="f-telefone">
+            <label for="telefone">Telefone</label>
+            <input type="tel" id="telefone" name="telefone" autocomplete="tel-national" inputmode="tel" maxlength="15" placeholder="(11) 91234-5678" aria-describedby="err-telefone" required>
+            <p class="err" id="err-telefone" role="alert">Informe um telefone com DDD.</p>
+          </div>
+          <div class="lf" id="f-area">
+            <label for="area">Área</label>
+            <select id="area" name="area" aria-describedby="err-area" required>
+              <option value="" selected disabled>Área</option>
+              <option>RH/Gente e Gestão</option>
+              <option>Jurídico</option>
+              <option>Compras/Financeiro</option>
+              <option>Outros</option>
+            </select>
+            <p class="err" id="err-area" role="alert">Escolha sua área.</p>
+          </div>
+          <div class="lf" id="f-cargo">
+            <label for="cargo">Cargo</label>
+            <select id="cargo" name="cargo" aria-describedby="err-cargo" required>
+              <option value="" selected disabled>Cargo</option>
+              <option>C-Level/Diretoria</option>
+              <option>Gerente/Coordenador</option>
+              <option>Analista</option>
+              <option>Assistente/Estagiário</option>
+              <option>Outros</option>
+            </select>
+            <p class="err" id="err-cargo" role="alert">Escolha seu cargo.</p>
+          </div>
+          <div class="lf lf--full" id="f-cliente" role="radiogroup" aria-labelledby="lbl-cliente">
+            <span class="lf-label" id="lbl-cliente">Sua empresa já é cliente Caju?</span>
+            <div class="yesno">
+              <label class="range-opt"><input type="radio" name="cliente" value="Sim"><span>Sim</span></label>
+              <label class="range-opt"><input type="radio" name="cliente" value="Não"><span>Não</span></label>
+            </div>
+            <p class="err" id="err-cliente" role="alert">Responda se já é cliente Caju.</p>
+          </div>
+        </div>
+        <p class="privacy">Ao enviar, você concorda com o uso dos seus dados para contato da Caju, conforme a nossa <a id="privacy-link" href="#" target="_blank" rel="noopener">Política de Privacidade</a>.</p>
+
         <div class="form-actions">
           <button type="button" class="btn btn--ghost" id="btn-back">← Voltar</button>
           <button type="submit" class="btn btn--primary">Ver meu resultado →</button>
@@ -307,7 +386,11 @@
       '60a100':{ valor: 80,  rotulo: 'R$ 60 a 100' },
       mais100: { valor: 120, rotulo: 'Mais de R$ 100' }
     },
-    limites: { pessoasMax: 1000, horasMax: 220 }
+    limites: { pessoasMax: 1000, horasMax: 220 },
+    // Webhook (Catch Hook) do Zapier que recebe as respostas.
+    zapierWebhook: 'https://hooks.zapier.com/hooks/catch/5758208/491vgxy/',
+    // TODO: confirmar o link oficial da Política de Privacidade.
+    privacyUrl: 'https://www.caju.com.br/politica-de-privacidade'
   };
 
   /* ================= CÁLCULO ================= */
@@ -396,13 +479,136 @@
     var c = document.querySelector('input[name="custo"]:checked');
     setErro('f-custo', !c); if (!c) { ok = false; primeiroErro = primeiroErro || 'custo'; }
 
+    // Dados de contato
+    var nome = $('nome').value.trim().replace(/\s+/g, ' ');
+    var nomeOk = nome.split(' ').filter(function (w) { return w.length >= 2; }).length >= 2;
+    setErro('f-nome', !nomeOk); if (!nomeOk) { ok = false; primeiroErro = primeiroErro || 'nome'; }
+
+    var email = $('email').value.trim().toLowerCase();
+    var emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+    setErro('f-email', !emailOk); if (!emailOk) { ok = false; primeiroErro = primeiroErro || 'email'; }
+
+    var tel = $('telefone').value.replace(/\D/g, '');
+    var telOk = /^[1-9][1-9]\d{8,9}$/.test(tel) && (tel.length === 10 || tel.charAt(2) === '9');
+    setErro('f-telefone', !telOk); if (!telOk) { ok = false; primeiroErro = primeiroErro || 'telefone'; }
+
+    var area = $('area').value;
+    setErro('f-area', !area); if (!area) { ok = false; primeiroErro = primeiroErro || 'area'; }
+
+    var cargo = $('cargo').value;
+    setErro('f-cargo', !cargo); if (!cargo) { ok = false; primeiroErro = primeiroErro || 'cargo'; }
+
+    var cli = document.querySelector('input[name="cliente"]:checked');
+    setErro('f-cliente', !cli); if (!cli) { ok = false; primeiroErro = primeiroErro || 'cliente'; }
+
     if (!ok) {
-      var alvo = primeiroErro === 'custo' ? document.querySelector('input[name="custo"]') : $(primeiroErro);
+      var alvo = primeiroErro === 'custo' ? document.querySelector('input[name="custo"]')
+        : primeiroErro === 'cliente' ? document.querySelector('input[name="cliente"]')
+        : $(primeiroErro);
       alvo.focus();
       notifyHeight();
       return null;
     }
-    return { pessoas: p.valor, horas: h.valor, retrabalho: r.vazio ? null : r.valor, faixa: c.value };
+    return {
+      pessoas: p.valor, horas: h.valor, retrabalho: r.vazio ? null : r.valor, faixa: c.value,
+      lead: { nome: nome, email: email, telefone: formatarTelefone(tel), area: area, cargo: cargo, cliente: cli.value }
+    };
+  }
+
+  function formatarTelefone(d) {
+    d = d.replace(/\D/g, '').slice(0, 11);
+    if (d.length <= 2) return d.length ? '(' + d : '';
+    if (d.length <= 6) return '(' + d.slice(0, 2) + ') ' + d.slice(2);
+    if (d.length <= 10) return '(' + d.slice(0, 2) + ') ' + d.slice(2, 6) + '-' + d.slice(6);
+    return '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7);
+  }
+
+  /* ================= CONTEXTO: UTMs e GA client id ================= */
+  // Dentro do embed do Framer a calculadora roda num iframe, então a URL e os cookies
+  // dela não são os da LP. Por isso juntamos três fontes:
+  //  1) a própria URL do iframe (se a LP repassar a query string no src);
+  //  2) uma mensagem 'caju-calc-context' enviada pela LP (snippet do README);
+  //  3) o cookie _ga, quando a calculadora roda direto na página (sem iframe).
+  var contexto = { utms: {}, gaClientId: '', pageUrl: '' };
+
+  function utmsDe(search) {
+    var out = {};
+    try {
+      new URLSearchParams(search).forEach(function (v, k) {
+        if (/^utm_/i.test(k) && v) out[k.toLowerCase()] = v.slice(0, 250);
+      });
+    } catch (e) {}
+    return out;
+  }
+  function gaDoCookie() {
+    var m = document.cookie.match(/(?:^|;\s*)_ga=([^;]+)/);
+    if (!m) return '';
+    var partes = decodeURIComponent(m[1]).split('.');
+    return partes.length >= 4 ? partes.slice(-2).join('.') : '';
+  }
+  contexto.utms = utmsDe(location.search);
+  contexto.gaClientId = gaDoCookie();
+  if (window.parent === window) contexto.pageUrl = location.href;
+
+  window.addEventListener('message', function (e) {
+    if (e.source !== window.parent || !e.data || e.data.type !== 'caju-calc-context') return;
+    var d = e.data;
+    if (d.utms && typeof d.utms === 'object') {
+      Object.keys(d.utms).forEach(function (k) {
+        if (/^utm_/i.test(k) && typeof d.utms[k] === 'string' && d.utms[k]) contexto.utms[k.toLowerCase()] = d.utms[k].slice(0, 250);
+      });
+    }
+    if (typeof d.gaClientId === 'string' && d.gaClientId) contexto.gaClientId = d.gaClientId.slice(0, 100);
+    if (typeof d.pageUrl === 'string' && d.pageUrl) contexto.pageUrl = d.pageUrl.slice(0, 1000);
+  });
+  function pedirContexto() {
+    if (window.parent === window) return;
+    try { window.parent.postMessage({ type: 'caju-calc-ready' }, '*'); } catch (e) {}
+  }
+  pedirContexto();
+
+  /* ================= ENVIO PARA O ZAPIER ================= */
+  // Formato de formulário (x-www-form-urlencoded) + no-cors: o navegador não faz
+  // checagem de CORS e o Zapier lê cada campo separado. Uma falha aqui nunca
+  // impede a pessoa de ver o resultado.
+  var ultimoEnvio = '';
+
+  function enviarZapier(inp, faixa, res) {
+    if (!CONFIG.zapierWebhook) return;
+    var dados = {
+      nome: inp.lead.nome,
+      email: inp.lead.email,
+      telefone: inp.lead.telefone,
+      area: inp.lead.area,
+      cargo: inp.lead.cargo,
+      ja_cliente_caju: inp.lead.cliente,
+      pessoas: inp.pessoas,
+      horas_mes_por_pessoa: inp.horas,
+      horas_retrabalho_mes_por_pessoa: inp.retrabalho === null ? '' : inp.retrabalho,
+      faixa_custo_hora: faixa.rotulo,
+      custo_hora_referencia: faixa.valor,
+      custo_operacional_ano: res.custoOperacional,
+      custo_retrabalho_ano: res.custoRetrabalho,
+      custo_total_ano: res.total,
+      custo_mensal: res.mensal,
+      horas_time_ano: res.horasAno,
+      utm_source: '', utm_medium: '', utm_campaign: '', utm_term: '', utm_content: '',
+      ga_client_id: contexto.gaClientId,
+      page_url: contexto.pageUrl,
+      enviado_em: new Date().toISOString()
+    };
+    Object.keys(contexto.utms).forEach(function (k) { dados[k] = contexto.utms[k]; });
+
+    var chave = JSON.stringify(Object.assign({}, dados, { enviado_em: '' }));
+    if (chave === ultimoEnvio) return; // mesmo cálculo reenviado: não duplica
+    ultimoEnvio = chave;
+
+    var body = new URLSearchParams();
+    Object.keys(dados).forEach(function (k) { body.append(k, String(dados[k])); });
+    try {
+      fetch(CONFIG.zapierWebhook, { method: 'POST', mode: 'no-cors', keepalive: true, body: body })
+        .catch(function () { ultimoEnvio = ''; });
+    } catch (e) { ultimoEnvio = ''; }
   }
 
   /* ================= RESULTADO ================= */
@@ -438,7 +644,9 @@
       tr.appendChild(a); tr.appendChild(b); tb.appendChild(tr);
     });
 
+    enviarZapier(inp, faixa, res);
     show('screen-result');
+    // Sem dados pessoais no dataLayer (regra do GA).
     track('calc_result', {
       calc_total: res.total, calc_faixa: inp.faixa,
       calc_pessoas: inp.pessoas, calc_retrabalho_preenchido: inp.retrabalho !== null
@@ -528,7 +736,18 @@
 
   /* ================= EVENTOS ================= */
   $('btn-cta').href = CONFIG.ctaUrl;
-  $('btn-start').addEventListener('click', function () { show('screen-form'); $('pessoas').focus({ preventScroll: true }); });
+  $('privacy-link').href = CONFIG.privacyUrl;
+  $('telefone').addEventListener('input', function () { this.value = formatarTelefone(this.value); });
+  ['nome', 'email', 'telefone'].forEach(function (id) {
+    $(id).addEventListener('input', function () { setErro('f-' + id, false); });
+  });
+  ['area', 'cargo'].forEach(function (id) {
+    $(id).addEventListener('change', function () { setErro('f-' + id, false); });
+  });
+  document.querySelectorAll('input[name="cliente"]').forEach(function (el) {
+    el.addEventListener('change', function () { setErro('f-cliente', false); });
+  });
+  $('btn-start').addEventListener('click', function () { pedirContexto(); show('screen-form'); $('pessoas').focus({ preventScroll: true }); });
   $('btn-back').addEventListener('click', function () { show('screen-intro'); });
   $('btn-redo').addEventListener('click', function () { show('screen-form'); });
   $('btn-pdf').addEventListener('click', baixarPDF);
