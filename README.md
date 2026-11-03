@@ -51,18 +51,28 @@ O mesmo cálculo não é enviado duas vezes seguidas. Os dados pessoais **não**
 
 ### UTMs e GA client id dentro do Framer (obrigatório)
 
-No embed, a calculadora roda num iframe e **não enxerga a URL nem os cookies da LP**. Sem o passo abaixo,
-as UTMs e o `ga_client_id` chegam vazios no Zapier.
+No embed, a calculadora roda num iframe e **não enxerga a URL nem os cookies da LP**. Quem entrega esses dados
+é o Code Component (seção abaixo). Se for usar o Embed comum, use o `framer-snippet.html`: troque `CALC_ORIGIN`
+pelo domínio da calculadora e cole o script em Page Settings → Custom Code → *End of `<body>` tag*.
+Sem um dos dois, as UTMs e o `ga_client_id` chegam vazios no Zapier.
 
-1. Abrir `framer-snippet.html` e trocar `CALC_ORIGIN` pelo domínio onde a calculadora estiver publicada.
-2. Colar o conteúdo no Framer: Page Settings → Custom Code → *End of `<body>` tag*.
+## Embed no Framer (recomendado: Code Component)
 
-## Embed no Framer
+Use o componente `framer/CalculadoraDespesas.tsx` no lugar do Embed comum. Ele:
+- ajusta a altura do quadro ao conteúdo de cada tela (a tela inicial tem ~600 px e o formulário de 1.550 a 2.200 px, conforme a largura);
+- rola a página até o topo da calculadora quando a tela muda (ex.: do formulário para o resultado);
+- repassa as UTMs e o GA client id. **Com o componente, o `framer-snippet.html` não é necessário.**
 
-1. Publicar o `index.html` numa URL pública (ex.: Vercel, como a calculadora de saúde mental).
-2. No Framer, usar o componente **Embed** no modo **URL**, apontando para essa URL.
-3. Altura: o formulário é a tela mais alta (cerca de 1.100 px no desktop e mais no celular). Defina uma altura fixa que caiba nas três telas,
-   ou use um Code Component que escute a mensagem `caju-calc-height`, que a página envia com a altura atual.
+Passo a passo:
+1. Publicar o `index.html` numa URL pública (ex.: Vercel).
+2. No Framer: Assets → Code → **+** → New Component. Apagar o conteúdo, colar o `CalculadoraDespesas.tsx` e salvar.
+3. Arrastar o componente para a página. Largura: Fill (ou fixa, a partir de 300 px). Altura: **Fit Content**.
+4. No painel à direita, preencher a **URL**. Em "Folga do topo", colocar a altura do menu fixo da LP, se houver (padrão: 80 px).
+
+Larguras testadas, sem rolagem lateral: 300, 340, 400, 480, 600, 700 e 900 px.
+
+Alternativa (Embed comum, modo URL): funciona, mas com altura fixa. Será preciso uma altura que caiba o formulário
+(até ~2.200 px em quadro estreito), o que deixa espaço vazio nas outras telas. Nesse caso, use o `framer-snippet.html` para as UTMs.
 
 ## Eventos emitidos (para tagueamento)
 

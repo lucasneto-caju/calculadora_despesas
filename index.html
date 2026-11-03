@@ -28,6 +28,7 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
+  html { background: var(--bg); }
   body {
     font-family: var(--font);
     background: var(--bg);
@@ -38,7 +39,6 @@
   .app {
     position: relative;
     overflow: hidden;
-    min-height: 640px;
     padding: 48px 16px;
     display: flex;
     justify-content: center;
@@ -102,9 +102,9 @@
     display: inline-block; font-size: 11.5px; font-weight: 600; color: var(--orange);
     border: 1px solid var(--orange); border-radius: 999px; padding: 1px 10px; margin-left: 6px; vertical-align: 2px;
   }
-  .input-wrap { display: flex; align-items: center; gap: 10px; padding-left: 36px; }
+  .input-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding-left: 36px; }
   .input-wrap input {
-    width: 150px; font-family: var(--font); font-size: 18px; font-weight: 600; color: var(--text);
+    width: 150px; max-width: 100%; font-family: var(--font); font-size: 18px; font-weight: 600; color: var(--text);
     padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--cream-border); background: #fff;
     -moz-appearance: textfield;
   }
@@ -131,7 +131,8 @@
 
   /* Resultado */
   .r-lead { color: var(--text-muted); font-size: 16px; margin: 0 0 4px; }
-  .r-total { color: var(--orange); font-weight: 700; font-size: clamp(36px, 7.5vw, 56px); line-height: 1.1; margin: 0 0 10px; word-break: break-word; }
+  .r-total { color: var(--orange); font-weight: 700; font-size: clamp(28px, 9vw, 56px); line-height: 1.1; margin: 0 0 10px; }
+  .r-total span, .r-total small { white-space: nowrap; }
   .r-total small { font-size: .5em; font-weight: 600; }
   .r-month { font-size: 16px; color: var(--text-muted); font-style: italic; margin: 0 0 24px; }
   .r-month strong { font-style: normal; color: var(--text); }
@@ -181,6 +182,10 @@
   .privacy { font-size: 12.5px; color: var(--text-subtle); margin: 14px 0 0; }
   .privacy a { color: var(--text-muted); }
 
+  /* Quadros médios (ex.: embed em coluna): faixas em 2 colunas */
+  @media (max-width: 680px) {
+    .ranges { grid-template-columns: repeat(2, 1fr); }
+  }
   @media (max-width: 560px) {
     .app { padding: 32px 16px; }
     .lead-grid { grid-template-columns: 1fr; padding: 16px; }
@@ -189,6 +194,23 @@
     .err { margin-left: 0; }
     .form-actions .btn { width: 100%; }
     .form-actions { flex-direction: column-reverse; }
+    .r-actions .btn { flex-basis: 100%; }
+  }
+  /* Quadros estreitos (até 420px): menos margem, mais espaço útil */
+  @media (max-width: 420px) {
+    .app { padding: 20px 10px; }
+    .card { padding: 22px 16px; border-radius: 16px; }
+    .field { padding: 16px 14px; }
+    .field-head { gap: 8px; }
+    .input-wrap input { width: 110px; font-size: 17px; }
+    .lead-grid { padding: 14px; }
+    .btn { padding: 14px 20px; font-size: 15px; }
+    .bullets li { font-size: 14px; }
+    .blob--a { width: 260px; height: 260px; top: -110px; right: -110px; }
+    .blob--b { width: 200px; height: 200px; bottom: -110px; left: -90px; }
+    .r-item { font-size: 14px; gap: 10px; }
+    .r-item .icon-dot { width: 34px; height: 34px; }
+    .breakdown { padding: 14px; font-size: 13px; }
   }
 </style>
 </head>
@@ -432,17 +454,31 @@
     track('calc_view_' + id.replace('screen-', ''));
     try { window.scrollTo({ top: 0 }); } catch (e) {}
     notifyHeight();
+    // Avisa a LP que a tela mudou, para ela rolar até o topo da calculadora
+    // (senão, ao ir do formulário longo para o resultado, a pessoa fica olhando um espaço vazio).
+    if (window.parent !== window) {
+      try { window.parent.postMessage({ type: 'caju-calc-screen', screen: id.replace('screen-', '') }, '*'); } catch (e) {}
+    }
   }
 
-  /* Altura para o embed no Framer: o pai pode ouvir esta mensagem e ajustar o iframe. */
+  /* Altura para o embed no Framer: o pai ouve esta mensagem e ajusta o iframe.
+     Mede o conteúdo (.app), não a janela: se o iframe estiver mais alto que o conteúdo,
+     documentElement.scrollHeight devolveria a altura do iframe e ele nunca encolheria. */
+  var alturaEnviada = 0;
   function notifyHeight() {
     if (window.parent === window) return;
-    requestAnimationFrame(function () {
-      window.parent.postMessage({ type: 'caju-calc-height', height: document.documentElement.scrollHeight }, '*');
-    });
+    // setTimeout, e não requestAnimationFrame: o Chrome pausa o rAF de iframes de outro
+    // domínio fora da tela, e a calculadora costuma começar abaixo da dobra da LP.
+    setTimeout(function () {
+      var h = Math.ceil(document.querySelector('.app').getBoundingClientRect().height);
+      if (h === alturaEnviada) return;
+      alturaEnviada = h;
+      window.parent.postMessage({ type: 'caju-calc-height', height: h }, '*');
+    }, 0);
   }
   window.addEventListener('resize', notifyHeight);
-  if ('ResizeObserver' in window) new ResizeObserver(notifyHeight).observe(document.body);
+  window.addEventListener('load', notifyHeight);
+  if ('ResizeObserver' in window) new ResizeObserver(notifyHeight).observe(document.querySelector('.app'));
 
   /* Evento para tagueamento (GTM/dataLayer), se existir no contexto da página. */
   function track(event, params) {
@@ -560,6 +596,9 @@
     }
     if (typeof d.gaClientId === 'string' && d.gaClientId) contexto.gaClientId = d.gaClientId.slice(0, 100);
     if (typeof d.pageUrl === 'string' && d.pageUrl) contexto.pageUrl = d.pageUrl.slice(0, 1000);
+    // A LP está ouvindo: reenvia a altura (caso a primeira mensagem tenha chegado antes dela).
+    alturaEnviada = 0;
+    notifyHeight();
   });
   function pedirContexto() {
     if (window.parent === window) return;
