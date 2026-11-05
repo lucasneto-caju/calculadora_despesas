@@ -1,7 +1,8 @@
 # Calculadora do Custo Invisível das Despesas — Caju
 
 Ferramenta TOFU, num único arquivo (`index.html`), para embed em uma LP no Framer.
-Fluxo: **Tela inicial → Formulário (4 perguntas) → Resultado** (com download em PDF e CTA para Gestão de Despesas).
+Fluxo: **Tela inicial → 4 perguntas (uma por tela) → Seus dados (2 telas) → Resultado** (com download em PDF e CTA para Gestão de Despesas).
+Cada etapa é curta para caber num embed pequeno, de tamanho fixo.
 
 ## Fórmula
 
@@ -30,8 +31,8 @@ No topo do `<script>`, no objeto `CONFIG`:
 
 ## Dados de contato e envio para o Zapier
 
-Depois das 4 perguntas, o formulário pede (todos obrigatórios): nome completo, e-mail, telefone com DDD,
-área, cargo e se a empresa já é cliente Caju. Quando a pessoa clica em "Ver meu resultado", a calculadora envia
+Depois das 4 perguntas, o formulário pede, em duas telas (todos obrigatórios): nome completo, e-mail e telefone com DDD;
+depois área, cargo e se a empresa já é cliente Caju. Quando a pessoa clica em "Ver meu resultado", a calculadora envia
 um POST (`application/x-www-form-urlencoded`) para o webhook com estes campos:
 
 | Campo | Exemplo |
@@ -49,33 +50,27 @@ um POST (`application/x-www-form-urlencoded`) para o webhook com estes campos:
 Os valores em reais vão como números puros, sem "R$" e sem pontos, para facilitar a análise.
 O mesmo cálculo não é enviado duas vezes seguidas. Os dados pessoais **não** vão para o `dataLayer`.
 
-### UTMs e GA client id dentro do Framer (obrigatório)
+## Como colocar no Framer
 
-No embed, a calculadora roda num iframe e **não enxerga a URL nem os cookies da LP**. Quem entrega esses dados
-é o Code Component (seção abaixo). Se for usar o Embed comum, use o `framer-snippet.html`: troque `CALC_ORIGIN`
-pelo domínio da calculadora e cole o script em Page Settings → Custom Code → *End of `<body>` tag*.
-Sem um dos dois, as UTMs e o `ga_client_id` chegam vazios no Zapier.
-
-## Embed no Framer (recomendado: Code Component)
-
-Use o componente `framer/CalculadoraDespesas.tsx` no lugar do Embed comum. Ele:
-- ajusta a altura do quadro ao conteúdo de cada tela (a tela inicial tem ~600 px e o formulário de 1.550 a 2.200 px, conforme a largura);
-- rola a página até o topo da calculadora quando a tela muda (ex.: do formulário para o resultado);
-- repassa as UTMs e o GA client id. **Com o componente, o `framer-snippet.html` não é necessário.**
-
-Passo a passo:
+### 1. Embed
 1. Publicar o `index.html` numa URL pública (ex.: Vercel).
-2. No Framer: Assets → Code → **+** → New Component. Apagar o conteúdo, colar o `CalculadoraDespesas.tsx` e salvar.
-3. Arrastar o componente para a página. Largura: Fill (ou fixa, a partir de 300 px). Altura: **Fit Content**.
-4. No painel à direita, preencher a **URL**. Em "Folga do topo", colocar a altura do menu fixo da LP, se houver (padrão: 80 px).
+2. No Framer, inserir um **Embed**, modo **URL**, com essa URL.
+3. Tamanho do quadro: **pelo menos 360 × 600 px** (largura × altura). Nesse tamanho, todas as telas cabem sem rolagem.
+   Tamanhos testados: 320×560, 360×640, 400×600, 600×600 e 800×700. Em 320×560, duas telas (dados 2 e resultado)
+   rolam um pouco dentro do quadro, mas funcionam.
 
-Larguras testadas, sem rolagem lateral: 300, 340, 400, 480, 600, 700 e 900 px.
+### 2. Custom Code (obrigatório para UTMs e GA client id)
+No embed, a calculadora roda num iframe e **não enxerga a URL nem os cookies da LP**. O `framer-snippet.html` resolve isso:
+ele lê as UTMs da URL da LP e o client id do GA (cookie `_ga`) e entrega para a calculadora.
 
-Alternativa (Embed comum, modo URL): funciona, mas com altura fixa. Será preciso uma altura que caiba o formulário
-(até ~2.200 px em quadro estreito), o que deixa espaço vazio nas outras telas. Nesse caso, use o `framer-snippet.html` para as UTMs.
+1. Abrir `framer-snippet.html` e trocar `CALC_ORIGIN` pelo domínio da calculadora
+   (só `https://dominio`, sem barra e sem caminho no final. Ex.: `https://calculadora-despesas-caju.vercel.app`).
+2. No Framer: Page Settings da LP → Custom Code → **End of `<body>` tag** → colar o conteúdo do arquivo.
+
+Sem este passo, as UTMs e o `ga_client_id` chegam vazios no Zapier (o resto funciona normalmente).
 
 ## Eventos emitidos (para tagueamento)
 
 Enviados para `window.dataLayer` (se existir) e para a página pai via `postMessage` (`type: 'caju-calc-event'`):
-`calc_view_intro`, `calc_view_form`, `calc_view_result`, `calc_result` (com `calc_total`, `calc_faixa`, `calc_pessoas`, `calc_retrabalho_preenchido`), `calc_download_pdf`, `calc_click_cta`.
+`calc_view_intro`, `calc_view_form`, `calc_form_step` (com `calc_step` de 1 a 6), `calc_view_result`, `calc_result` (com `calc_total`, `calc_faixa`, `calc_pessoas`, `calc_retrabalho_preenchido`), `calc_download_pdf`, `calc_click_cta`.
 Os nomes são provisórios e precisam ser validados com o time de Digital Analytics.

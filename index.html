@@ -38,7 +38,9 @@
   }
   .app {
     position: relative;
+    min-height: 100vh;
     overflow: hidden;
+    overflow: clip; /* clip não deixa o contêiner rolar sozinho ao focar um campo */
     padding: 48px 16px;
     display: flex;
     justify-content: center;
@@ -127,6 +129,15 @@
   .range-opt:hover span { border-color: var(--orange); }
   .range-opt input:checked + span { background: var(--orange); border-color: var(--orange); color: #fff; }
 
+  .step { display: none; }
+  .step.is-active { display: block; animation: fade .3s ease; }
+  .step .field { margin-bottom: 0; }
+  .progress-head { margin-bottom: 18px; }
+  .progress-head .overline { margin: 0 0 8px; }
+  .progress { height: 6px; border-radius: 999px; background: var(--cream); overflow: hidden; }
+  .progress span { display: block; height: 100%; width: 16%; background: var(--orange); border-radius: 999px; transition: width .3s ease; }
+  .hint { color: var(--text-subtle); font-size: 13px; margin: 12px 0 0; }
+  .step .section-title { margin-top: 0; margin-bottom: 14px; }
   .form-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 28px; }
 
   /* Resultado */
@@ -212,6 +223,32 @@
     .r-item .icon-dot { width: 34px; height: 34px; }
     .breakdown { padding: 14px; font-size: 13px; }
   }
+  /* Quadros baixos (embed de altura fixa): menos espaço vertical */
+  @media (max-height: 700px) {
+    .app { padding-top: 20px; padding-bottom: 20px; }
+    h1 { font-size: clamp(24px, 6.5vw, 38px); margin-bottom: 12px; }
+    .lead { font-size: 15px; margin-bottom: 18px; }
+    .bullets { gap: 8px; margin-bottom: 20px; }
+    .bullets .icon-dot { width: 32px; height: 32px; }
+    .bullets .icon-dot svg { width: 16px; height: 16px; }
+    .overline { margin-bottom: 10px; }
+    .card { padding-top: 22px; padding-bottom: 22px; }
+    .progress-head { margin-bottom: 14px; }
+    .form-actions { margin-top: 18px; }
+    .r-total { margin-bottom: 4px; }
+    .r-month { margin-bottom: 14px; }
+    .divider { margin-bottom: 14px; }
+    .r-items { gap: 10px; margin-bottom: 14px; }
+    .breakdown { margin-bottom: 16px; padding-top: 12px; padding-bottom: 12px; }
+    .link-btn { margin-top: 12px; }
+    .btn { padding-top: 13px; padding-bottom: 13px; }
+    .step .section-title { font-size: 16px; margin-bottom: 10px; }
+    .lead-grid { gap: 10px 12px; }
+    .lf > label, .lf > .lf-label { margin-bottom: 4px; }
+    .lf input[type=text], .lf input[type=email], .lf input[type=tel], .lf select { padding-top: 10px; padding-bottom: 10px; }
+    .yesno .range-opt span { min-height: 42px; }
+    .privacy { margin-top: 10px; }
+  }
 </style>
 </head>
 <body>
@@ -236,10 +273,12 @@
     <!-- 2. Formulário -->
     <section class="screen" id="screen-form" aria-labelledby="form-title">
       <form class="card" id="calc-form" novalidate>
-        <p class="overline" style="margin-bottom:8px">Calculadora do Custo Invisível</p>
-        <h2 id="form-title">4 perguntas, um número claro</h2>
-        <p class="sub">Responda com estimativas. Não precisa ser exato.</p>
+        <div class="progress-head">
+          <p class="overline" id="form-title" aria-live="polite">Pergunta 1 de 4</p>
+          <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+        </div>
 
+        <div class="step" data-step="0">
         <div class="field" id="f-pessoas">
           <div class="field-head">
             <span class="num">01</span>
@@ -253,7 +292,10 @@
           </div>
           <p class="err" id="err-pessoas" role="alert">Informe um número inteiro entre 1 e 1.000.</p>
         </div>
+        <p class="hint">Responda com estimativas. Não precisa ser exato.</p>
+        </div>
 
+        <div class="step" data-step="1">
         <div class="field" id="f-horas">
           <div class="field-head">
             <span class="num">02</span>
@@ -267,7 +309,9 @@
           </div>
           <p class="err" id="err-horas" role="alert">Informe um número inteiro entre 1 e 220 horas.</p>
         </div>
+        </div>
 
+        <div class="step" data-step="2">
         <div class="field" id="f-retrabalho">
           <div class="field-head">
             <span class="num">03</span>
@@ -281,7 +325,9 @@
           </div>
           <p class="err" id="err-retrabalho" role="alert">Informe um número inteiro, menor ou igual às horas da pergunta 2.</p>
         </div>
+        </div>
 
+        <div class="step" data-step="3">
         <fieldset class="field" id="f-custo">
           <legend class="q"><span class="field-head" style="margin-bottom:14px"><span class="num">04</span><span>Qual o custo médio por hora dessas pessoas?
             <span class="help">Uma estimativa já basta. Se tiver dúvida, divida o salário mensal por 160.</span></span></span>
@@ -294,9 +340,10 @@
           </div>
           <p class="err" id="err-custo" role="alert">Escolha uma faixa de custo por hora.</p>
         </fieldset>
+        </div>
 
-        <h3 class="section-title">Seus dados</h3>
-        <p class="section-sub">Para liberar seu resultado.</p>
+        <div class="step" data-step="4">
+        <h3 class="section-title">Pronto! Só falta liberar seu resultado</h3>
         <div class="lead-grid">
           <div class="lf lf--full" id="f-nome">
             <label for="nome">Nome completo</label>
@@ -313,6 +360,12 @@
             <input type="tel" id="telefone" name="telefone" autocomplete="tel-national" inputmode="tel" maxlength="15" placeholder="(11) 91234-5678" aria-describedby="err-telefone" required>
             <p class="err" id="err-telefone" role="alert">Informe um telefone com DDD.</p>
           </div>
+        </div>
+        </div>
+
+        <div class="step" data-step="5">
+        <h3 class="section-title">Quase lá: conte um pouco sobre você</h3>
+        <div class="lead-grid">
           <div class="lf" id="f-area">
             <label for="area">Área</label>
             <select id="area" name="area" aria-describedby="err-area" required>
@@ -346,10 +399,11 @@
           </div>
         </div>
         <p class="privacy">Ao enviar, você concorda com o uso dos seus dados para contato da Caju, conforme a nossa <a id="privacy-link" href="#" target="_blank" rel="noopener">Política de Privacidade</a>.</p>
+        </div>
 
         <div class="form-actions">
           <button type="button" class="btn btn--ghost" id="btn-back">← Voltar</button>
-          <button type="submit" class="btn btn--primary">Ver meu resultado →</button>
+          <button type="submit" class="btn btn--primary" id="btn-next">Continuar →</button>
         </div>
       </form>
     </section>
@@ -452,33 +506,33 @@
       $(s).classList.toggle('is-active', s === id);
     });
     track('calc_view_' + id.replace('screen-', ''));
-    try { window.scrollTo({ top: 0 }); } catch (e) {}
-    notifyHeight();
-    // Avisa a LP que a tela mudou, para ela rolar até o topo da calculadora
-    // (senão, ao ir do formulário longo para o resultado, a pessoa fica olhando um espaço vazio).
-    if (window.parent !== window) {
-      try { window.parent.postMessage({ type: 'caju-calc-screen', screen: id.replace('screen-', '') }, '*'); } catch (e) {}
-    }
+    topo();
   }
+  function topo() { try { window.scrollTo(0, 0); document.querySelector('.app').scrollTop = 0; } catch (e) {} }
 
-  /* Altura para o embed no Framer: o pai ouve esta mensagem e ajusta o iframe.
-     Mede o conteúdo (.app), não a janela: se o iframe estiver mais alto que o conteúdo,
-     documentElement.scrollHeight devolveria a altura do iframe e ele nunca encolheria. */
-  var alturaEnviada = 0;
-  function notifyHeight() {
-    if (window.parent === window) return;
-    // setTimeout, e não requestAnimationFrame: o Chrome pausa o rAF de iframes de outro
-    // domínio fora da tela, e a calculadora costuma começar abaixo da dobra da LP.
-    setTimeout(function () {
-      var h = Math.ceil(document.querySelector('.app').getBoundingClientRect().height);
-      if (h === alturaEnviada) return;
-      alturaEnviada = h;
-      window.parent.postMessage({ type: 'caju-calc-height', height: h }, '*');
-    }, 0);
+  /* ================= ETAPAS DO FORMULÁRIO ================= */
+  // Uma pergunta por tela, depois os dados de contato: cada tela cabe num embed pequeno.
+  var CAMPOS_ETAPA = [['pessoas'], ['horas'], ['retrabalho'], ['custo'], ['nome', 'email', 'telefone'], ['area', 'cargo', 'cliente']];
+  var PERGUNTAS = 4;
+  var TOTAL_ETAPAS = CAMPOS_ETAPA.length;
+  var etapa = 0;
+
+  function irParaEtapa(n) {
+    etapa = n;
+    document.querySelectorAll('.step').forEach(function (el) {
+      el.classList.toggle('is-active', Number(el.getAttribute('data-step')) === n);
+    });
+    var ultima = n === TOTAL_ETAPAS - 1;
+    $('form-title').textContent = n < PERGUNTAS
+      ? 'Pergunta ' + (n + 1) + ' de ' + PERGUNTAS
+      : 'Seus dados (' + (n - PERGUNTAS + 1) + ' de ' + (TOTAL_ETAPAS - PERGUNTAS) + ')';
+    $('progress-bar').style.width = Math.round(((n + 1) / TOTAL_ETAPAS) * 100) + '%';
+    $('btn-next').textContent = ultima ? 'Ver meu resultado →' : 'Continuar →';
+    topo();
+    var primeiro = document.querySelector('.step.is-active input, .step.is-active select');
+    if (primeiro) try { primeiro.focus({ preventScroll: true }); } catch (e) {}
+    track('calc_form_step', { calc_step: n + 1 });
   }
-  window.addEventListener('resize', notifyHeight);
-  window.addEventListener('load', notifyHeight);
-  if ('ResizeObserver' in window) new ResizeObserver(notifyHeight).observe(document.querySelector('.app'));
 
   /* Evento para tagueamento (GTM/dataLayer), se existir no contexto da página. */
   function track(event, params) {
@@ -498,53 +552,57 @@
   }
   function setErro(fieldId, on) { $(fieldId).classList.toggle('has-error', on); }
 
-  function validar() {
+  // Valida só os campos da lista (os da etapa atual). Devolve true/false.
+  function validar(campos) {
     var ok = true, primeiroErro = null;
-    var p = lerInteiro($('pessoas'));
-    var pOk = !p.vazio && p.valor >= 1 && p.valor <= CONFIG.limites.pessoasMax;
-    setErro('f-pessoas', !pOk); if (!pOk) { ok = false; primeiroErro = primeiroErro || 'pessoas'; }
-
-    var h = lerInteiro($('horas'));
-    var hOk = !h.vazio && h.valor >= 1 && h.valor <= CONFIG.limites.horasMax;
-    setErro('f-horas', !hOk); if (!hOk) { ok = false; primeiroErro = primeiroErro || 'horas'; }
-
-    var r = lerInteiro($('retrabalho'));
-    var rOk = r.vazio || (!isNaN(r.valor) && r.valor >= 0 && (!hOk || r.valor <= h.valor));
-    setErro('f-retrabalho', !rOk); if (!rOk) { ok = false; primeiroErro = primeiroErro || 'retrabalho'; }
-
-    var c = document.querySelector('input[name="custo"]:checked');
-    setErro('f-custo', !c); if (!c) { ok = false; primeiroErro = primeiroErro || 'custo'; }
-
-    // Dados de contato
-    var nome = $('nome').value.trim().replace(/\s+/g, ' ');
-    var nomeOk = nome.split(' ').filter(function (w) { return w.length >= 2; }).length >= 2;
-    setErro('f-nome', !nomeOk); if (!nomeOk) { ok = false; primeiroErro = primeiroErro || 'nome'; }
-
-    var email = $('email').value.trim().toLowerCase();
-    var emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
-    setErro('f-email', !emailOk); if (!emailOk) { ok = false; primeiroErro = primeiroErro || 'email'; }
-
-    var tel = $('telefone').value.replace(/\D/g, '');
-    var telOk = /^[1-9][1-9]\d{8,9}$/.test(tel) && (tel.length === 10 || tel.charAt(2) === '9');
-    setErro('f-telefone', !telOk); if (!telOk) { ok = false; primeiroErro = primeiroErro || 'telefone'; }
-
-    var area = $('area').value;
-    setErro('f-area', !area); if (!area) { ok = false; primeiroErro = primeiroErro || 'area'; }
-
-    var cargo = $('cargo').value;
-    setErro('f-cargo', !cargo); if (!cargo) { ok = false; primeiroErro = primeiroErro || 'cargo'; }
-
-    var cli = document.querySelector('input[name="cliente"]:checked');
-    setErro('f-cliente', !cli); if (!cli) { ok = false; primeiroErro = primeiroErro || 'cliente'; }
+    function checar(id, valido) {
+      if (campos.indexOf(id) === -1) return;
+      setErro('f-' + id, !valido);
+      if (!valido) { ok = false; primeiroErro = primeiroErro || id; }
+    }
+    var d = lerDados();
+    checar('pessoas', !d.p.vazio && d.p.valor >= 1 && d.p.valor <= CONFIG.limites.pessoasMax);
+    var hOk = !d.h.vazio && d.h.valor >= 1 && d.h.valor <= CONFIG.limites.horasMax;
+    checar('horas', hOk);
+    checar('retrabalho', d.r.vazio || (!isNaN(d.r.valor) && d.r.valor >= 0 && (!hOk || d.r.valor <= d.h.valor)));
+    checar('custo', !!d.c);
+    checar('nome', d.nome.split(' ').filter(function (w) { return w.length >= 2; }).length >= 2);
+    checar('email', /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email));
+    checar('telefone', /^[1-9][1-9]\d{8,9}$/.test(d.tel) && (d.tel.length === 10 || d.tel.charAt(2) === '9'));
+    checar('area', !!d.area);
+    checar('cargo', !!d.cargo);
+    checar('cliente', !!d.cli);
 
     if (!ok) {
       var alvo = primeiroErro === 'custo' ? document.querySelector('input[name="custo"]')
         : primeiroErro === 'cliente' ? document.querySelector('input[name="cliente"]')
         : $(primeiroErro);
       alvo.focus();
-      notifyHeight();
-      return null;
     }
+    return ok;
+  }
+
+  function lerDados() {
+    return {
+      p: lerInteiro($('pessoas')),
+      h: lerInteiro($('horas')),
+      r: lerInteiro($('retrabalho')),
+      c: document.querySelector('input[name="custo"]:checked'),
+      nome: $('nome').value.trim().replace(/\s+/g, ' '),
+      email: $('email').value.trim().toLowerCase(),
+      tel: $('telefone').value.replace(/\D/g, ''),
+      area: $('area').value,
+      cargo: $('cargo').value,
+      cli: document.querySelector('input[name="cliente"]:checked')
+    };
+  }
+
+  // Valida todas as etapas e monta os dados finais (ou leva para a 1ª etapa com erro).
+  function coletar() {
+    for (var i = 0; i < TOTAL_ETAPAS; i++) {
+      if (!validar(CAMPOS_ETAPA[i])) { if (i !== etapa) { irParaEtapa(i); validar(CAMPOS_ETAPA[i]); } return null; }
+    }
+    var d = lerDados(), p = d.p, h = d.h, r = d.r, c = d.c, nome = d.nome, email = d.email, tel = d.tel, area = d.area, cargo = d.cargo, cli = d.cli;
     return {
       pessoas: p.valor, horas: h.valor, retrabalho: r.vazio ? null : r.valor, faixa: c.value,
       lead: { nome: nome, email: email, telefone: formatarTelefone(tel), area: area, cargo: cargo, cliente: cli.value }
@@ -596,9 +654,6 @@
     }
     if (typeof d.gaClientId === 'string' && d.gaClientId) contexto.gaClientId = d.gaClientId.slice(0, 100);
     if (typeof d.pageUrl === 'string' && d.pageUrl) contexto.pageUrl = d.pageUrl.slice(0, 1000);
-    // A LP está ouvindo: reenvia a altura (caso a primeira mensagem tenha chegado antes dela).
-    alturaEnviada = 0;
-    notifyHeight();
   });
   function pedirContexto() {
     if (window.parent === window) return;
@@ -786,14 +841,20 @@
   document.querySelectorAll('input[name="cliente"]').forEach(function (el) {
     el.addEventListener('change', function () { setErro('f-cliente', false); });
   });
-  $('btn-start').addEventListener('click', function () { pedirContexto(); show('screen-form'); $('pessoas').focus({ preventScroll: true }); });
-  $('btn-back').addEventListener('click', function () { show('screen-intro'); });
-  $('btn-redo').addEventListener('click', function () { show('screen-form'); });
+  $('btn-start').addEventListener('click', function () { pedirContexto(); show('screen-form'); irParaEtapa(0); });
+  $('btn-back').addEventListener('click', function () {
+    if (etapa === 0) show('screen-intro'); else irParaEtapa(etapa - 1);
+  });
+  $('btn-redo').addEventListener('click', function () { show('screen-form'); irParaEtapa(0); });
   $('btn-pdf').addEventListener('click', baixarPDF);
   $('btn-cta').addEventListener('click', function () { track('calc_click_cta'); });
   $('calc-form').addEventListener('submit', function (e) {
     e.preventDefault();
-    var inp = validar();
+    if (etapa < TOTAL_ETAPAS - 1) {
+      if (validar(CAMPOS_ETAPA[etapa])) irParaEtapa(etapa + 1);
+      return;
+    }
+    var inp = coletar();
     if (inp) render(inp);
   });
   // Limpa o erro do campo assim que a pessoa corrige
@@ -805,7 +866,6 @@
   });
 
   track('calc_view_intro');
-  notifyHeight();
 })();
 </script>
 </body>
