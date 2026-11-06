@@ -167,7 +167,7 @@
   #caju-calc .lf { min-width: 0; }
   #caju-calc .lf--full { grid-column: 1 / -1; }
   #caju-calc .lf > label, #caju-calc .lf > .lf-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
-  #caju-calc .lf input[type=text], #caju-calc .lf input[type=email], #caju-calc .lf input[type=tel], #caju-calc .lf select {
+  #caju-calc .lf input[type=text], #caju-calc .lf input[type=email], #caju-calc .lf input[type=tel], #caju-calc .lf input[type=number], #caju-calc .lf select {
     width: 100%; font-family: var(--font); font-size: 15px; color: var(--text);
     padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--cream-border); background: #fff;
   }
@@ -238,7 +238,7 @@
     #caju-calc .step .section-title { font-size: 16px; margin-bottom: 10px; }
     #caju-calc .lead-grid { gap: 10px 12px; }
     #caju-calc .lf > label, #caju-calc .lf > .lf-label { margin-bottom: 4px; }
-    #caju-calc .lf input[type=text], #caju-calc .lf input[type=email], #caju-calc .lf input[type=tel], #caju-calc .lf select { padding-top: 10px; padding-bottom: 10px; }
+    #caju-calc .lf input[type=text], #caju-calc .lf input[type=email], #caju-calc .lf input[type=tel], #caju-calc .lf input[type=number], #caju-calc .lf select { padding-top: 10px; padding-bottom: 10px; }
     #caju-calc .yesno .range-opt span { min-height: 42px; }
     #caju-calc .privacy { margin-top: 10px; }
 </style>
@@ -357,6 +357,30 @@
         </div>
 
         <div class="step" data-step="5">
+        <h3 class="section-title">Sobre a sua empresa</h3>
+        <div class="lead-grid">
+          <div class="lf lf--full" id="f-empresa">
+            <label for="empresa">Nome da empresa</label>
+            <input type="text" id="empresa" name="empresa" autocomplete="organization" maxlength="120" aria-describedby="err-empresa" required>
+            <p class="err" id="err-empresa" role="alert">Informe o nome da empresa.</p>
+          </div>
+          <div class="lf lf--full" id="f-colaboradores">
+            <label for="colaboradores">Número de colaboradores</label>
+            <input type="number" id="colaboradores" name="colaboradores" inputmode="numeric" min="1" max="1000000" step="1" placeholder="Ex.: 250" aria-describedby="err-colaboradores" required>
+            <p class="err" id="err-colaboradores" role="alert">Informe um número inteiro de colaboradores (mínimo 1).</p>
+          </div>
+          <div class="lf lf--full" id="f-cliente" role="radiogroup" aria-labelledby="lbl-cliente">
+            <span class="lf-label" id="lbl-cliente">Sua empresa já é cliente Caju?</span>
+            <div class="yesno">
+              <label class="range-opt"><input type="radio" name="cliente" value="Sim"><span>Sim</span></label>
+              <label class="range-opt"><input type="radio" name="cliente" value="Não"><span>Não</span></label>
+            </div>
+            <p class="err" id="err-cliente" role="alert">Responda se já é cliente Caju.</p>
+          </div>
+        </div>
+        </div>
+
+        <div class="step" data-step="6">
         <h3 class="section-title">Quase lá: conte um pouco sobre você</h3>
         <div class="lead-grid">
           <div class="lf" id="f-area">
@@ -381,14 +405,6 @@
               <option>Outros</option>
             </select>
             <p class="err" id="err-cargo" role="alert">Escolha seu cargo.</p>
-          </div>
-          <div class="lf lf--full" id="f-cliente" role="radiogroup" aria-labelledby="lbl-cliente">
-            <span class="lf-label" id="lbl-cliente">Sua empresa já é cliente Caju?</span>
-            <div class="yesno">
-              <label class="range-opt"><input type="radio" name="cliente" value="Sim"><span>Sim</span></label>
-              <label class="range-opt"><input type="radio" name="cliente" value="Não"><span>Não</span></label>
-            </div>
-            <p class="err" id="err-cliente" role="alert">Responda se já é cliente Caju.</p>
           </div>
         </div>
         <p class="privacy">Ao enviar, você concorda com o uso dos seus dados para contato da Caju, conforme a nossa <a id="privacy-link" href="#" target="_blank" rel="noopener">Política de Privacidade</a>.</p>
@@ -526,7 +542,7 @@
 
   /* ================= ETAPAS DO FORMULÁRIO ================= */
   // Uma pergunta por tela, depois os dados de contato: cada tela cabe num embed pequeno.
-  var CAMPOS_ETAPA = [['pessoas'], ['horas'], ['retrabalho'], ['custo'], ['nome', 'email', 'telefone'], ['area', 'cargo', 'cliente']];
+  var CAMPOS_ETAPA = [['pessoas'], ['horas'], ['retrabalho'], ['custo'], ['nome', 'email', 'telefone'], ['empresa', 'colaboradores', 'cliente'], ['area', 'cargo']];
   var PERGUNTAS = 4;
   var TOTAL_ETAPAS = CAMPOS_ETAPA.length;
   var etapa = 0;
@@ -583,6 +599,8 @@
     checar('nome', d.nome.split(' ').filter(function (w) { return w.length >= 2; }).length >= 2);
     checar('email', /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email));
     checar('telefone', /^[1-9][1-9]\d{8,9}$/.test(d.tel) && (d.tel.length === 10 || d.tel.charAt(2) === '9'));
+    checar('empresa', d.empresa.length >= 2);
+    checar('colaboradores', !d.colab.vazio && d.colab.valor >= 1 && d.colab.valor <= 1000000);
     checar('area', !!d.area);
     checar('cargo', !!d.cargo);
     checar('cliente', !!d.cli);
@@ -605,6 +623,8 @@
       nome: $('nome').value.trim().replace(/\s+/g, ' '),
       email: $('email').value.trim().toLowerCase(),
       tel: $('telefone').value.replace(/\D/g, ''),
+      empresa: $('empresa').value.trim().replace(/\s+/g, ' '),
+      colab: lerInteiro($('colaboradores')),
       area: $('area').value,
       cargo: $('cargo').value,
       cli: raiz.querySelector('input[name="cliente"]:checked')
@@ -619,7 +639,7 @@
     var d = lerDados(), p = d.p, h = d.h, r = d.r, c = d.c, nome = d.nome, email = d.email, tel = d.tel, area = d.area, cargo = d.cargo, cli = d.cli;
     return {
       pessoas: p.valor, horas: h.valor, retrabalho: r.vazio ? null : r.valor, faixa: c.value,
-      lead: { nome: nome, email: email, telefone: formatarTelefone(tel), area: area, cargo: cargo, cliente: cli.value }
+      lead: { nome: nome, email: email, telefone: formatarTelefone(tel), empresa: d.empresa, colaboradores: d.colab.valor, area: area, cargo: cargo, cliente: cli.value }
     };
   }
 
@@ -706,6 +726,8 @@
       telefone: inp.lead.telefone,
       area: inp.lead.area,
       cargo: inp.lead.cargo,
+      empresa: inp.lead.empresa,
+      numero_colaboradores: inp.lead.colaboradores,
       ja_cliente_caju: inp.lead.cliente,
       pessoas: inp.pessoas,
       horas_mes_por_pessoa: inp.horas,
@@ -868,7 +890,7 @@
   $('btn-cta').href = CONFIG.ctaUrl;
   $('privacy-link').href = CONFIG.privacyUrl;
   $('telefone').addEventListener('input', function () { this.value = formatarTelefone(this.value); });
-  ['nome', 'email', 'telefone'].forEach(function (id) {
+  ['nome', 'email', 'telefone', 'empresa', 'colaboradores'].forEach(function (id) {
     $(id).addEventListener('input', function () { setErro('f-' + id, false); });
   });
   ['area', 'cargo'].forEach(function (id) {
