@@ -565,11 +565,16 @@
   }
 
   /* Evento para tagueamento (GTM/dataLayer), se existir no contexto da página. */
+  // Nunca enviar dados pessoais aqui (regra do GA): só eventos e parâmetros calc_*.
+  // Num quadro, o evento vai para a LP, e o Custom Code (framer-snippet.html) repassa ao GA.
+  // Direto na página: com GTM vai para o dataLayer; só com gtag.js vai direto ao GA4.
   function track(event, params) {
     try {
       var payload = Object.assign({ event: event }, params || {});
-      if (window.dataLayer) window.dataLayer.push(payload);
-      if (window.parent !== window) window.parent.postMessage({ type: 'caju-calc-event', payload: payload }, '*');
+      if (emQuadro) { window.parent.postMessage({ type: 'caju-calc-event', payload: payload }, '*'); return; }
+      var temGTM = Object.keys(window.google_tag_manager || {}).some(function (k) { return k.indexOf('GTM-') === 0; });
+      if (!temGTM && typeof window.gtag === 'function') window.gtag('event', event, params || {});
+      else if (window.dataLayer) window.dataLayer.push(payload);
     } catch (e) {}
   }
 

@@ -84,8 +84,29 @@ Todo o CSS vale só dentro de `#caju-calc`, para não alterar a LP, e o layout s
 genérica da LP (ex.: `.btn`, `.card`) poderia afetar a calculadora. O Framer usa classes próprias (`framer-...`),
 então é improvável.
 
-## Eventos emitidos (para tagueamento)
+## Eventos para o GA
 
-Enviados para `window.dataLayer` (se existir) e para a página pai via `postMessage` (`type: 'caju-calc-event'`):
-`calc_view_intro`, `calc_view_form`, `calc_form_step` (com `calc_step` de 1 a 7), `calc_view_result`, `calc_result` (com `calc_total`, `calc_faixa`, `calc_pessoas`, `calc_retrabalho_preenchido`), `calc_download_pdf`, `calc_click_cta`.
-Os nomes são provisórios e precisam ser validados com o time de Digital Analytics.
+A calculadora dispara estes eventos (nenhum leva dado pessoal):
+
+| Evento | Quando | Parâmetros |
+|---|---|---|
+| `calc_view_intro` | a tela inicial aparece | – |
+| `calc_view_form` | clica em "Calcular meu custo invisível" | – |
+| `calc_form_step` | abre cada etapa do formulário | `calc_step` (1 a 4 = perguntas; 5 a 7 = dados) |
+| `calc_view_result` | o resultado aparece | – |
+| `calc_result` | o resultado é calculado | `calc_total` (R$/ano), `calc_faixa`, `calc_pessoas`, `calc_retrabalho_preenchido` |
+| `calc_download_pdf` | baixa o PDF | `calc_total` |
+| `calc_click_cta` | clica em "Gestão de Despesas" | – |
+
+Como chegam ao GA:
+- **Num quadro (iframe):** a calculadora avisa a LP e o **Custom Code** (`framer-snippet.html`) repassa o evento.
+- **Direto na página:** a própria calculadora envia.
+- Em ambos: se a LP tem **GTM**, o evento vai para o `dataLayer`; se tem só **gtag.js** (GA4 sem GTM), vai direto ao GA4.
+
+Com GTM, para cada evento que quiser no GA4:
+1. Acionador → **Evento personalizado** → nome do evento (ex.: `calc_result`). Para pegar todos: `^calc_` com "usar correspondência de regex".
+2. Variáveis → **Variável da camada de dados** para cada parâmetro (ex.: `calc_total`).
+3. Tag → **Google Analytics: evento do GA4** → nome do evento `{{Event}}` e os parâmetros com as variáveis acima.
+4. No GA4, registrar os parâmetros que quiser usar em relatórios como **dimensões/métricas personalizadas**.
+
+Os nomes dos eventos são provisórios: validar com o time de Digital Analytics antes de criar as tags.

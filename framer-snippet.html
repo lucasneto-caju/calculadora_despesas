@@ -8,7 +8,8 @@
   calculadora quando ela pedir. Se a calculadora conseguir ler esses dados sozinha,
   o script simplesmente não é usado. Mantê-lo instalado não causa problema.
 
-  Também faz o download do PDF do resultado quando o quadro não tem permissão para isso.
+  Também faz o download do PDF do resultado quando o quadro não tem permissão para isso,
+  e repassa os eventos da calculadora (calc_*) para o GA da LP (dataLayer do GTM ou gtag).
 
   Só responde a quadros (iframes) que estão nesta página, e só envia UTMs, client id do GA
   e a URL da página. Nenhum dado pessoal.
@@ -55,9 +56,32 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
   }
 
+  // Repassa os eventos da calculadora para o GA da LP.
+  // Com GTM: vão para o dataLayer (crie no GTM os acionadores "Evento personalizado").
+  // Sem GTM, só com gtag.js: vão direto como eventos do GA4.
+  function repassarEvento(p) {
+    if (!p || typeof p.event !== 'string' || !/^calc_[a-z_]+$/.test(p.event)) return;
+    var params = {};
+    Object.keys(p).forEach(function (k) {
+      var v = p[k];
+      if (k !== 'event' && /^calc_[a-z_]+$/.test(k) && (typeof v === 'number' || typeof v === 'boolean' || typeof v === 'string')) {
+        params[k] = typeof v === 'string' ? v.slice(0, 100) : v;
+      }
+    });
+    var temGTM = false;
+    try { temGTM = Object.keys(window.google_tag_manager || {}).some(function (k) { return k.indexOf('GTM-') === 0; }); } catch (e) {}
+    if (temGTM || typeof window.gtag !== 'function') {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push(Object.assign({ event: p.event }, params));
+    } else {
+      window.gtag('event', p.event, params);
+    }
+  }
+
   window.addEventListener('message', function (e) {
     if (!e.data || !ehQuadroDaPagina(e.source)) return;
     if (e.data.type === 'caju-calc-pdf') { baixarPdf(e.data.pdf); return; }
+    if (e.data.type === 'caju-calc-event') { repassarEvento(e.data.payload); return; }
     if (e.data.type !== 'caju-calc-ready') return;
     // '*' porque o quadro do Embed pode não ter endereço próprio (origem "null").
     e.source.postMessage({
