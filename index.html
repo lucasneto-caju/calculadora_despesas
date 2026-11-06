@@ -463,8 +463,10 @@
 
   /* ================= CONFIGURAÇÃO ================= */
   var CONFIG = {
-    // TODO: trocar pelo link final da página de Gestão de Despesas.
-    ctaUrl: 'https://www.caju.com.br/gestao-de-despesas',
+    // Link do botão "Gestão de Despesas" (com UTMs da campanha).
+    ctaUrl: 'https://www.caju.com.br/plataforma/despesas?utm_source=site&utm_medium=owned&utm_campaign=ctd_t_mr_site_xx_xx_geral_dp_calculadora-despesas',
+    // Texto curto que aparece no PDF (o link clicável continua sendo o ctaUrl completo).
+    ctaTextoPdf: 'caju.com.br/plataforma/despesas',
     // Valor de referência (R$/hora) usado na conta para cada faixa.
     custoHora: {
       ate30:   { valor: 25,  rotulo: 'Até R$ 30' },
@@ -877,7 +879,7 @@
     doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
     doc.text('Próximo passo: conheça a Gestão de Despesas da Caju', M + 6, y + 9);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
-    doc.textWithLink(CONFIG.ctaUrl, M + 6, y + 16, { url: CONFIG.ctaUrl });
+    doc.textWithLink(CONFIG.ctaTextoPdf, M + 6, y + 16, { url: CONFIG.ctaUrl });
 
     doc.setTextColor(138, 127, 120); doc.setFontSize(8);
     doc.text('Gerado em ' + new Date().toLocaleDateString('pt-BR') + '  •  Caju  •  Calculadora do Custo Invisível', M, 287);

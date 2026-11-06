@@ -24,7 +24,8 @@ Validações: pessoas de 1 a 1.000; horas de 1 a 220 por pessoa/mês; retrabalho
 ## O que dá para editar sem mexer no resto
 
 No topo do `<script>`, no objeto `CONFIG`:
-- `ctaUrl` — link do botão "Gestão de Despesas" (**hoje é provisório**).
+- `ctaUrl` — link do botão "Gestão de Despesas" (página de Despesas, com UTMs da campanha).
+- `ctaTextoPdf` — texto curto do link que aparece no PDF.
 - `custoHora` — valor usado em cada faixa.
 - `zapierWebhook` — URL do Catch Hook do Zapier.
 - `privacyUrl` — link da Política de Privacidade (**confirmar o link oficial**).
