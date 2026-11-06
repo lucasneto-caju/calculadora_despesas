@@ -12,7 +12,12 @@
   /* Todo o estilo vale só dentro de #caju-calc, para não afetar a LP caso o Framer
      insira o código direto na página. O layout se adapta à largura do próprio bloco
      (container queries), não à da janela. */
-  #caju-calc { display: block; container-type: inline-size; container-name: calc; }
+  /* width: 100% é obrigatório: com container-type o bloco não mede a própria largura pelo
+     conteúdo e, dentro de uma caixa que centraliza (flex/grid, como a do Embed do Framer),
+     encolheria para 0 px. align-self/min-height fazem o fundo ocupar a altura do bloco. */
+  #caju-calc { display: block; container-type: inline-size; container-name: calc;
+    width: 100%; max-width: 100%; align-self: stretch; justify-self: stretch; min-height: 100%; }
+  #caju-calc .app { min-height: inherit; }
   /* Dentro de um quadro (iframe), o fundo preenche o quadro inteiro */
   #caju-calc.in-frame .app { min-height: 100vh; }
   #caju-calc {
