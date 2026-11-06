@@ -15,9 +15,9 @@
   /* width: 100% é obrigatório: com container-type o bloco não mede a própria largura pelo
      conteúdo e, dentro de uma caixa que centraliza (flex/grid, como a do Embed do Framer),
      encolheria para 0 px. align-self/min-height fazem o fundo ocupar a altura do bloco. */
-  #caju-calc { display: block; container-type: inline-size; container-name: calc;
+  #caju-calc { display: flex; flex-direction: column; container-type: inline-size; container-name: calc;
     width: 100%; max-width: 100%; align-self: stretch; justify-self: stretch; min-height: 100%; }
-  #caju-calc .app { min-height: inherit; }
+  #caju-calc .app { flex: 1 0 auto; }
   /* Dentro de um quadro (iframe), o fundo preenche o quadro inteiro */
   #caju-calc.in-frame .app { min-height: 100vh; }
   #caju-calc {
@@ -57,7 +57,9 @@
   #caju-calc .blob { position: absolute; border-radius: 50%; background: var(--bg-blob); pointer-events: none; }
   #caju-calc .blob--a { width: 420px; height: 420px; top: -160px; right: -140px; }
   #caju-calc .blob--b { width: 300px; height: 300px; bottom: -150px; left: -120px; }
-  #caju-calc .container { position: relative; z-index: 1; width: 100%; max-width: 720px; }
+  /* margin auto (vertical) centraliza quando o bloco é mais alto que o conteúdo; se o conteúdo
+     for maior, a margem vira 0 e ele começa no topo, sem cortar nada. */
+  #caju-calc .container { position: relative; z-index: 1; width: 100%; max-width: 720px; margin-top: auto; margin-bottom: auto; }
   #caju-calc .screen { display: none; animation: cajuCalcFade .35s ease; }
   #caju-calc .screen.is-active { display: block; }
   @keyframes cajuCalcFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
