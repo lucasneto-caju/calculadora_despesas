@@ -9,7 +9,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
+  /* Todo o estilo vale só dentro de #caju-calc, para não afetar a LP caso o Framer
+     insira o código direto na página. O layout se adapta à largura do próprio bloco
+     (container queries), não à da janela. */
+  #caju-calc { display: block; container-type: inline-size; container-name: calc; }
+  /* Dentro de um quadro (iframe), o fundo preenche o quadro inteiro */
+  #caju-calc.in-frame .app { min-height: 100vh; }
+  #caju-calc {
     --bg: #2B2521;
     --bg-blob: #4A2F24;
     --orange: #FF5A2E;
@@ -26,19 +32,16 @@
     --radius: 20px;
     --font: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  html { background: var(--bg); }
-  body {
+  #caju-calc, #caju-calc * { box-sizing: border-box; }
+  #caju-calc {
     font-family: var(--font);
     background: var(--bg);
     color: var(--white);
     -webkit-font-smoothing: antialiased;
     line-height: 1.5;
   }
-  .app {
+  #caju-calc .app {
     position: relative;
-    min-height: 100vh;
     overflow: hidden;
     overflow: clip; /* clip não deixa o contêiner rolar sozinho ao focar um campo */
     padding: 48px 16px;
@@ -46,212 +49,202 @@
     justify-content: center;
     align-items: flex-start;
   }
-  .blob { position: absolute; border-radius: 50%; background: var(--bg-blob); pointer-events: none; }
-  .blob--a { width: 420px; height: 420px; top: -160px; right: -140px; }
-  .blob--b { width: 300px; height: 300px; bottom: -150px; left: -120px; }
-  .container { position: relative; z-index: 1; width: 100%; max-width: 720px; }
-
-  .screen { display: none; animation: fade .35s ease; }
-  .screen.is-active { display: block; }
-  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-
-  .overline {
+  #caju-calc .blob { position: absolute; border-radius: 50%; background: var(--bg-blob); pointer-events: none; }
+  #caju-calc .blob--a { width: 420px; height: 420px; top: -160px; right: -140px; }
+  #caju-calc .blob--b { width: 300px; height: 300px; bottom: -150px; left: -120px; }
+  #caju-calc .container { position: relative; z-index: 1; width: 100%; max-width: 720px; }
+  #caju-calc .screen { display: none; animation: cajuCalcFade .35s ease; }
+  #caju-calc .screen.is-active { display: block; }
+  @keyframes cajuCalcFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  #caju-calc .overline {
     color: var(--orange); font-size: 12px; font-weight: 600;
     letter-spacing: .08em; text-transform: uppercase; margin: 0 0 16px;
   }
-  h1 { font-size: clamp(30px, 5.5vw, 46px); line-height: 1.15; font-weight: 700; margin: 0 0 20px; }
-  h1 .hl { color: var(--orange); }
-  .lead { font-size: clamp(16px, 2.4vw, 19px); color: #E9DFD8; margin: 0 0 32px; max-width: 560px; }
-
-  .bullets { list-style: none; padding: 0; margin: 0 0 36px; display: grid; gap: 14px; }
-  .bullets li { display: flex; gap: 14px; align-items: center; color: #E9DFD8; font-size: 15px; }
-  .icon-dot {
+  #caju-calc h1 { font-size: clamp(30px, 5.5vw, 46px); font-size: clamp(30px, 5.5cqw, 46px); line-height: 1.15; font-weight: 700; margin: 0 0 20px; }
+  #caju-calc h1 .hl { color: var(--orange); }
+  #caju-calc .lead { font-size: clamp(16px, 2.4vw, 19px); font-size: clamp(16px, 2.4cqw, 19px); color: #E9DFD8; margin: 0 0 32px; max-width: 560px; }
+  #caju-calc .bullets { list-style: none; padding: 0; margin: 0 0 36px; display: grid; gap: 14px; }
+  #caju-calc .bullets li { display: flex; gap: 14px; align-items: center; color: #E9DFD8; font-size: 15px; }
+  #caju-calc .icon-dot {
     flex: none; width: 40px; height: 40px; border-radius: 50%;
     background: var(--orange); display: grid; place-items: center;
   }
-  .icon-dot svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-  .btn {
+  #caju-calc .icon-dot svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  #caju-calc .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     font-family: var(--font); font-weight: 600; font-size: 16px;
     padding: 16px 32px; border-radius: 999px; border: 2px solid transparent;
     cursor: pointer; text-decoration: none; transition: background .2s, transform .2s, color .2s;
     line-height: 1.2;
   }
-  .btn--primary { background: var(--orange); color: #fff; }
-  .btn--primary:hover { background: var(--orange-dark); transform: translateY(-1px); }
-  .btn--ghost { background: transparent; color: var(--text-muted); border-color: var(--line); }
-  .btn--ghost:hover { border-color: var(--orange); color: var(--orange); }
-  .btn:focus-visible, input:focus-visible, .range-opt input:focus-visible + span { outline: 3px solid #FFC9AE; outline-offset: 2px; }
-  .btn[disabled] { opacity: .6; cursor: progress; }
-  .note { font-size: 13px; color: var(--text-subtle); margin-top: 14px; }
-
-  .card {
+  #caju-calc .btn--primary { background: var(--orange); color: #fff; }
+  #caju-calc .btn--primary:hover { background: var(--orange-dark); transform: translateY(-1px); }
+  #caju-calc .btn--ghost { background: transparent; color: var(--text-muted); border-color: var(--line); }
+  #caju-calc .btn--ghost:hover { border-color: var(--orange); color: var(--orange); }
+  #caju-calc .btn:focus-visible, #caju-calc input:focus-visible, #caju-calc .range-opt input:focus-visible + span { outline: 3px solid #FFC9AE; outline-offset: 2px; }
+  #caju-calc .btn[disabled] { opacity: .6; cursor: progress; }
+  #caju-calc .note { font-size: 13px; color: var(--text-subtle); margin-top: 14px; }
+  #caju-calc .card {
+    border: 0;
     background: var(--white); color: var(--text);
     border-radius: var(--radius); padding: clamp(24px, 5vw, 40px);
     box-shadow: 0 20px 48px rgba(0,0,0,.28);
   }
-  .card h2 { font-size: clamp(22px, 3.6vw, 28px); line-height: 1.25; margin: 0 0 6px; }
-  .card .sub { color: var(--text-muted); font-size: 15px; margin: 0 0 28px; }
-
-  .field { background: var(--cream); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid transparent; }
-  .field.has-error { border-color: var(--error); }
-  .field-head { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
-  .num { flex: none; color: var(--orange); font-weight: 700; font-size: 14px; margin-top: 2px; min-width: 22px; }
-  .field label.q, .field legend.q { font-weight: 600; font-size: 16px; line-height: 1.35; display: block; padding: 0; }
-  .help { display: block; color: var(--text-muted); font-size: 13.5px; font-weight: 400; margin-top: 4px; }
-  .tag-opt {
+  #caju-calc .card h2 { font-size: clamp(22px, 3.6vw, 28px); font-size: clamp(22px, 3.6cqw, 28px); line-height: 1.25; margin: 0 0 6px; }
+  #caju-calc .card .sub { color: var(--text-muted); font-size: 15px; margin: 0 0 28px; }
+  #caju-calc .field { background: var(--cream); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid transparent; }
+  #caju-calc .field.has-error { border-color: var(--error); }
+  #caju-calc .field-head { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+  #caju-calc .num { flex: none; color: var(--orange); font-weight: 700; font-size: 14px; margin-top: 2px; min-width: 22px; }
+  #caju-calc .field label.q, #caju-calc .field legend.q { font-weight: 600; font-size: 16px; line-height: 1.35; display: block; padding: 0; }
+  #caju-calc .help { display: block; color: var(--text-muted); font-size: 13.5px; font-weight: 400; margin-top: 4px; }
+  #caju-calc .tag-opt {
     display: inline-block; font-size: 11.5px; font-weight: 600; color: var(--orange);
     border: 1px solid var(--orange); border-radius: 999px; padding: 1px 10px; margin-left: 6px; vertical-align: 2px;
   }
-  .input-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding-left: 36px; }
-  .input-wrap input {
+  #caju-calc .input-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding-left: 36px; }
+  #caju-calc .input-wrap input {
     width: 150px; max-width: 100%; font-family: var(--font); font-size: 18px; font-weight: 600; color: var(--text);
     padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--cream-border); background: #fff;
     -moz-appearance: textfield;
   }
-  .input-wrap input::-webkit-outer-spin-button, .input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-  .input-wrap input:focus { border-color: var(--orange); outline: none; }
-  .unit { color: var(--text-muted); font-size: 15px; }
-  .err { display: none; color: var(--error); font-size: 13px; margin: 8px 0 0 36px; }
-  .field.has-error .err { display: block; }
-
-  fieldset.field { margin: 0 0 16px; min-width: 0; }
-  fieldset.field legend.q { float: left; width: 100%; }
-  .ranges { clear: both; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding-left: 36px; }
-  .range-opt { position: relative; cursor: pointer; }
-  .range-opt input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-  .range-opt span {
+  #caju-calc .input-wrap input::-webkit-outer-spin-button, #caju-calc .input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  #caju-calc .input-wrap input:focus { border-color: var(--orange); outline: none; }
+  #caju-calc .unit { color: var(--text-muted); font-size: 15px; }
+  #caju-calc .err { display: none; color: var(--error); font-size: 13px; margin: 8px 0 0 36px; }
+  #caju-calc .field.has-error .err { display: block; }
+  #caju-calc fieldset.field { margin: 0 0 16px; min-width: 0; }
+  #caju-calc fieldset.field legend.q { float: left; width: 100%; }
+  #caju-calc .ranges { clear: both; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding-left: 36px; }
+  #caju-calc .range-opt { position: relative; cursor: pointer; }
+  #caju-calc .range-opt input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  #caju-calc .range-opt span {
     display: flex; align-items: center; justify-content: center; text-align: center; min-height: 52px;
     padding: 10px 8px; border-radius: 12px; background: #fff; border: 1.5px solid var(--cream-border);
     font-size: 14px; font-weight: 600; color: var(--text); transition: all .15s;
   }
-  .range-opt:hover span { border-color: var(--orange); }
-  .range-opt input:checked + span { background: var(--orange); border-color: var(--orange); color: #fff; }
-
-  .step { display: none; }
-  .step.is-active { display: block; animation: fade .3s ease; }
-  .step .field { margin-bottom: 0; }
-  .progress-head { margin-bottom: 18px; }
-  .progress-head .overline { margin: 0 0 8px; }
-  .progress { height: 6px; border-radius: 999px; background: var(--cream); overflow: hidden; }
-  .progress span { display: block; height: 100%; width: 16%; background: var(--orange); border-radius: 999px; transition: width .3s ease; }
-  .hint { color: var(--text-subtle); font-size: 13px; margin: 12px 0 0; }
-  .step .section-title { margin-top: 0; margin-bottom: 14px; }
-  .form-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 28px; }
-
+  #caju-calc .range-opt:hover span { border-color: var(--orange); }
+  #caju-calc .range-opt input:checked + span { background: var(--orange); border-color: var(--orange); color: #fff; }
+  #caju-calc .step { display: none; }
+  #caju-calc .step.is-active { display: block; animation: cajuCalcFade .3s ease; }
+  #caju-calc .step .field { margin-bottom: 0; }
+  #caju-calc .progress-head { margin-bottom: 18px; }
+  #caju-calc .progress-head .overline { margin: 0 0 8px; }
+  #caju-calc .progress { height: 6px; border-radius: 999px; background: var(--cream); overflow: hidden; }
+  #caju-calc .progress span { display: block; height: 100%; width: 16%; background: var(--orange); border-radius: 999px; transition: width .3s ease; }
+  #caju-calc .hint { color: var(--text-subtle); font-size: 13px; margin: 12px 0 0; }
+  #caju-calc .step .section-title { margin-top: 0; margin-bottom: 14px; }
+  #caju-calc .form-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 28px; }
   /* Resultado */
-  .r-lead { color: var(--text-muted); font-size: 16px; margin: 0 0 4px; }
-  .r-total { color: var(--orange); font-weight: 700; font-size: clamp(28px, 9vw, 56px); line-height: 1.1; margin: 0 0 10px; }
-  .r-total span, .r-total small { white-space: nowrap; }
-  .r-total small { font-size: .5em; font-weight: 600; }
-  .r-month { font-size: 16px; color: var(--text-muted); font-style: italic; margin: 0 0 24px; }
-  .r-month strong { font-style: normal; color: var(--text); }
-  .divider { height: 1px; background: var(--line); margin: 0 0 20px; }
-  .r-items { display: grid; gap: 14px; margin-bottom: 24px; }
-  .r-item { display: flex; gap: 14px; align-items: center; font-size: 15px; color: var(--text-muted); }
-  .r-item strong { color: var(--text); }
-  .r-item .icon-dot--green { background: var(--green); }
-  .r-item .val-green { color: var(--green); }
-  .breakdown { background: var(--cream); border-radius: 14px; padding: 16px 20px; margin-bottom: 28px; font-size: 14px; }
-  .breakdown summary { cursor: pointer; font-weight: 600; color: var(--text); }
-  .breakdown table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-  .breakdown td { padding: 6px 0; border-bottom: 1px solid var(--cream-border); color: var(--text-muted); vertical-align: top; }
-  .breakdown td:last-child { text-align: right; color: var(--text); font-weight: 600; white-space: nowrap; padding-left: 12px; }
-  .breakdown tr:last-child td { border-bottom: 0; }
-  .breakdown .disclaimer { margin: 12px 0 0; font-size: 12.5px; color: var(--text-subtle); }
-  .r-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-  .r-actions .btn--primary { flex: 1 1 240px; }
-  .r-actions .btn--ghost { flex: 1 1 180px; }
-  .link-btn { background: none; border: 0; color: var(--text-subtle); font-family: var(--font); font-size: 14px; text-decoration: underline; cursor: pointer; margin-top: 18px; padding: 0; }
-  .link-btn:hover { color: var(--orange); }
-
+  #caju-calc .r-lead { color: var(--text-muted); font-size: 16px; margin: 0 0 4px; }
+  #caju-calc .r-total { color: var(--orange); font-weight: 700; font-size: clamp(28px, 9vw, 56px); font-size: clamp(28px, 9cqw, 56px); line-height: 1.1; margin: 0 0 10px; }
+  #caju-calc .r-total span, #caju-calc .r-total small { white-space: nowrap; }
+  #caju-calc .r-total small { font-size: .5em; font-weight: 600; }
+  #caju-calc .r-month { font-size: 16px; color: var(--text-muted); font-style: italic; margin: 0 0 24px; }
+  #caju-calc .r-month strong { font-style: normal; color: var(--text); }
+  #caju-calc .divider { height: 1px; background: var(--line); margin: 0 0 20px; }
+  #caju-calc .r-items { display: grid; gap: 14px; margin-bottom: 24px; }
+  #caju-calc .r-item { display: flex; gap: 14px; align-items: center; font-size: 15px; color: var(--text-muted); }
+  #caju-calc .r-item strong { color: var(--text); }
+  #caju-calc .r-item .icon-dot--green { background: var(--green); }
+  #caju-calc .r-item .val-green { color: var(--green); }
+  #caju-calc .breakdown { background: var(--cream); border-radius: 14px; padding: 16px 20px; margin-bottom: 28px; font-size: 14px; }
+  #caju-calc .breakdown summary { cursor: pointer; font-weight: 600; color: var(--text); }
+  #caju-calc .breakdown table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  #caju-calc .breakdown td { padding: 6px 0; border-bottom: 1px solid var(--cream-border); color: var(--text-muted); vertical-align: top; }
+  #caju-calc .breakdown td:last-child { text-align: right; color: var(--text); font-weight: 600; white-space: nowrap; padding-left: 12px; }
+  #caju-calc .breakdown tr:last-child td { border-bottom: 0; }
+  #caju-calc .breakdown .disclaimer { margin: 12px 0 0; font-size: 12.5px; color: var(--text-subtle); }
+  #caju-calc .r-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  #caju-calc .r-actions .btn--primary { flex: 1 1 240px; }
+  #caju-calc .r-actions .btn--ghost { flex: 1 1 180px; }
+  #caju-calc .link-btn { background: none; border: 0; color: var(--text-subtle); font-family: var(--font); font-size: 14px; text-decoration: underline; cursor: pointer; margin-top: 18px; padding: 0; }
+  #caju-calc .link-btn:hover { color: var(--orange); }
   /* Seus dados */
-  .section-title { font-size: 18px; font-weight: 700; margin: 32px 0 4px; }
-  .section-sub { color: var(--text-muted); font-size: 14px; margin: 0 0 16px; }
-  .lead-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; background: var(--cream); border-radius: 16px; padding: 20px; }
-  .lf { min-width: 0; }
-  .lf--full { grid-column: 1 / -1; }
-  .lf > label, .lf > .lf-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
-  .lf input[type=text], .lf input[type=email], .lf input[type=tel], .lf select {
+  #caju-calc .section-title { font-size: 18px; font-weight: 700; margin: 32px 0 4px; }
+  #caju-calc .section-sub { color: var(--text-muted); font-size: 14px; margin: 0 0 16px; }
+  #caju-calc .lead-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; background: var(--cream); border-radius: 16px; padding: 20px; }
+  #caju-calc .lf { min-width: 0; }
+  #caju-calc .lf--full { grid-column: 1 / -1; }
+  #caju-calc .lf > label, #caju-calc .lf > .lf-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  #caju-calc .lf input[type=text], #caju-calc .lf input[type=email], #caju-calc .lf input[type=tel], #caju-calc .lf select {
     width: 100%; font-family: var(--font); font-size: 15px; color: var(--text);
     padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--cream-border); background: #fff;
   }
-  .lf select {
+  #caju-calc .lf select {
     -webkit-appearance: none; appearance: none; padding-right: 40px; cursor: pointer;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235B5049' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 14px center;
   }
-  .lf select:invalid { color: var(--text-subtle); }
-  .lf input:focus, .lf select:focus { border-color: var(--orange); outline: none; }
-  .lf .err { margin-left: 0; }
-  .lf.has-error input, .lf.has-error select { border-color: var(--error); }
-  .lf.has-error .err { display: block; }
-  .yesno { display: flex; gap: 10px; }
-  .yesno .range-opt { flex: 1; }
-  .yesno .range-opt span { min-height: 46px; }
-  .privacy { font-size: 12.5px; color: var(--text-subtle); margin: 14px 0 0; }
-  .privacy a { color: var(--text-muted); }
-
+  #caju-calc .lf select:invalid { color: var(--text-subtle); }
+  #caju-calc .lf input:focus, #caju-calc .lf select:focus { border-color: var(--orange); outline: none; }
+  #caju-calc .lf .err { margin-left: 0; }
+  #caju-calc .lf.has-error input, #caju-calc .lf.has-error select { border-color: var(--error); }
+  #caju-calc .lf.has-error .err { display: block; }
+  #caju-calc .yesno { display: flex; gap: 10px; }
+  #caju-calc .yesno .range-opt { flex: 1; }
+  #caju-calc .yesno .range-opt span { min-height: 46px; }
+  #caju-calc .privacy { font-size: 12.5px; color: var(--text-subtle); margin: 14px 0 0; }
+  #caju-calc .privacy a { color: var(--text-muted); }
   /* Quadros médios (ex.: embed em coluna): faixas em 2 colunas */
-  @media (max-width: 680px) {
-    .ranges { grid-template-columns: repeat(2, 1fr); }
+  @container calc (max-width: 680px) {
+    #caju-calc .ranges { grid-template-columns: repeat(2, 1fr); }
   }
-  @media (max-width: 560px) {
-    .app { padding: 32px 16px; }
-    .lead-grid { grid-template-columns: 1fr; padding: 16px; }
-    .ranges { grid-template-columns: repeat(2, 1fr); padding-left: 0; }
-    .input-wrap { padding-left: 0; }
-    .err { margin-left: 0; }
-    .form-actions .btn { width: 100%; }
-    .form-actions { flex-direction: column-reverse; }
-    .r-actions .btn { flex-basis: 100%; }
+  @container calc (max-width: 560px) {
+    #caju-calc .app { padding: 32px 16px; }
+    #caju-calc .lead-grid { grid-template-columns: 1fr; padding: 16px; }
+    #caju-calc .ranges { grid-template-columns: repeat(2, 1fr); padding-left: 0; }
+    #caju-calc .input-wrap { padding-left: 0; }
+    #caju-calc .err { margin-left: 0; }
+    #caju-calc .form-actions .btn { width: 100%; }
+    #caju-calc .form-actions { flex-direction: column-reverse; }
+    #caju-calc .r-actions .btn { flex-basis: 100%; }
   }
   /* Quadros estreitos (até 420px): menos margem, mais espaço útil */
-  @media (max-width: 420px) {
-    .app { padding: 20px 10px; }
-    .card { padding: 22px 16px; border-radius: 16px; }
-    .field { padding: 16px 14px; }
-    .field-head { gap: 8px; }
-    .input-wrap input { width: 110px; font-size: 17px; }
-    .lead-grid { padding: 14px; }
-    .btn { padding: 14px 20px; font-size: 15px; }
-    .bullets li { font-size: 14px; }
-    .blob--a { width: 260px; height: 260px; top: -110px; right: -110px; }
-    .blob--b { width: 200px; height: 200px; bottom: -110px; left: -90px; }
-    .r-item { font-size: 14px; gap: 10px; }
-    .r-item .icon-dot { width: 34px; height: 34px; }
-    .breakdown { padding: 14px; font-size: 13px; }
+  @container calc (max-width: 420px) {
+    #caju-calc .app { padding: 20px 10px; }
+    #caju-calc .card { padding: 22px 16px; border-radius: 16px; }
+    #caju-calc .field { padding: 16px 14px; }
+    #caju-calc .field-head { gap: 8px; }
+    #caju-calc .input-wrap input { width: 110px; font-size: 17px; }
+    #caju-calc .lead-grid { padding: 14px; }
+    #caju-calc .btn { padding: 14px 20px; font-size: 15px; }
+    #caju-calc .bullets li { font-size: 14px; }
+    #caju-calc .blob--a { width: 260px; height: 260px; top: -110px; right: -110px; }
+    #caju-calc .blob--b { width: 200px; height: 200px; bottom: -110px; left: -90px; }
+    #caju-calc .r-item { font-size: 14px; gap: 10px; }
+    #caju-calc .r-item .icon-dot { width: 34px; height: 34px; }
+    #caju-calc .breakdown { padding: 14px; font-size: 13px; }
   }
   /* Quadros baixos (embed de altura fixa): menos espaço vertical */
-  @media (max-height: 700px) {
-    .app { padding-top: 20px; padding-bottom: 20px; }
-    h1 { font-size: clamp(24px, 6.5vw, 38px); margin-bottom: 12px; }
-    .lead { font-size: 15px; margin-bottom: 18px; }
-    .bullets { gap: 8px; margin-bottom: 20px; }
-    .bullets .icon-dot { width: 32px; height: 32px; }
-    .bullets .icon-dot svg { width: 16px; height: 16px; }
-    .overline { margin-bottom: 10px; }
-    .card { padding-top: 22px; padding-bottom: 22px; }
-    .progress-head { margin-bottom: 14px; }
-    .form-actions { margin-top: 18px; }
-    .r-total { margin-bottom: 4px; }
-    .r-month { margin-bottom: 14px; }
-    .divider { margin-bottom: 14px; }
-    .r-items { gap: 10px; margin-bottom: 14px; }
-    .breakdown { margin-bottom: 16px; padding-top: 12px; padding-bottom: 12px; }
-    .link-btn { margin-top: 12px; }
-    .btn { padding-top: 13px; padding-bottom: 13px; }
-    .step .section-title { font-size: 16px; margin-bottom: 10px; }
-    .lead-grid { gap: 10px 12px; }
-    .lf > label, .lf > .lf-label { margin-bottom: 4px; }
-    .lf input[type=text], .lf input[type=email], .lf input[type=tel], .lf select { padding-top: 10px; padding-bottom: 10px; }
-    .yesno .range-opt span { min-height: 42px; }
-    .privacy { margin-top: 10px; }
-  }
+  /* compacto (padrão) */
+    #caju-calc .app { padding-top: 20px; padding-bottom: 20px; }
+    #caju-calc h1 { font-size: clamp(24px, 6.5vw, 38px); font-size: clamp(24px, 6.5cqw, 38px); margin-bottom: 12px; }
+    #caju-calc .lead { font-size: 15px; margin-bottom: 18px; }
+    #caju-calc .bullets { gap: 8px; margin-bottom: 20px; }
+    #caju-calc .bullets .icon-dot { width: 32px; height: 32px; }
+    #caju-calc .bullets .icon-dot svg { width: 16px; height: 16px; }
+    #caju-calc .overline { margin-bottom: 10px; }
+    #caju-calc .card { padding-top: 22px; padding-bottom: 22px; }
+    #caju-calc .progress-head { margin-bottom: 14px; }
+    #caju-calc .form-actions { margin-top: 18px; }
+    #caju-calc .r-total { margin-bottom: 4px; }
+    #caju-calc .r-month { margin-bottom: 14px; }
+    #caju-calc .divider { margin-bottom: 14px; }
+    #caju-calc .r-items { gap: 10px; margin-bottom: 14px; }
+    #caju-calc .breakdown { margin-bottom: 16px; padding-top: 12px; padding-bottom: 12px; }
+    #caju-calc .link-btn { margin-top: 12px; }
+    #caju-calc .btn { padding-top: 13px; padding-bottom: 13px; }
+    #caju-calc .step .section-title { font-size: 16px; margin-bottom: 10px; }
+    #caju-calc .lead-grid { gap: 10px 12px; }
+    #caju-calc .lf > label, #caju-calc .lf > .lf-label { margin-bottom: 4px; }
+    #caju-calc .lf input[type=text], #caju-calc .lf input[type=email], #caju-calc .lf input[type=tel], #caju-calc .lf select { padding-top: 10px; padding-bottom: 10px; }
+    #caju-calc .yesno .range-opt span { min-height: 42px; }
+    #caju-calc .privacy { margin-top: 10px; }
 </style>
 </head>
 <body>
+<div id="caju-calc">
 <div class="app">
   <div class="blob blob--a" aria-hidden="true"></div>
   <div class="blob blob--b" aria-hidden="true"></div>
@@ -445,6 +438,7 @@
 
   </main>
 </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script>
@@ -501,6 +495,18 @@
 
   /* ================= NAVEGAÇÃO ================= */
   var $ = function (id) { return document.getElementById(id); };
+  var raiz = $('caju-calc');
+  var app = raiz.querySelector('.app');
+  var emQuadro = window.parent !== window;
+  // Quadro isolado (sandbox): não tem endereço próprio e pode não ter permissão de download.
+  var isolado = emQuadro && (function () { try { return window.location.origin === 'null'; } catch (e) { return true; } })();
+  var paiResponde = false; // vira true quando o Custom Code da LP responde
+  if (emQuadro) {
+    // Dentro de um quadro: sem margem padrão e com o fundo ocupando o quadro todo.
+    raiz.classList.add('in-frame');
+    document.body.style.margin = '0';
+    document.documentElement.style.background = '#2B2521';
+  }
   function show(id) {
     ['screen-intro', 'screen-form', 'screen-result'].forEach(function (s) {
       $(s).classList.toggle('is-active', s === id);
@@ -508,7 +514,15 @@
     track('calc_view_' + id.replace('screen-', ''));
     topo();
   }
-  function topo() { try { window.scrollTo(0, 0); document.querySelector('.app').scrollTop = 0; } catch (e) {} }
+  // Volta ao início da calculadora a cada troca de tela/etapa.
+  // Num quadro, rola o quadro; direto na página, só rola se o topo da calculadora tiver saído da tela.
+  function topo() {
+    try {
+      app.scrollTop = 0;
+      if (emQuadro) { window.scrollTo(0, 0); return; }
+      if (raiz.getBoundingClientRect().top < 0) raiz.scrollIntoView({ block: 'start' });
+    } catch (e) {}
+  }
 
   /* ================= ETAPAS DO FORMULÁRIO ================= */
   // Uma pergunta por tela, depois os dados de contato: cada tela cabe num embed pequeno.
@@ -519,7 +533,7 @@
 
   function irParaEtapa(n) {
     etapa = n;
-    document.querySelectorAll('.step').forEach(function (el) {
+    raiz.querySelectorAll('.step').forEach(function (el) {
       el.classList.toggle('is-active', Number(el.getAttribute('data-step')) === n);
     });
     var ultima = n === TOTAL_ETAPAS - 1;
@@ -529,7 +543,7 @@
     $('progress-bar').style.width = Math.round(((n + 1) / TOTAL_ETAPAS) * 100) + '%';
     $('btn-next').textContent = ultima ? 'Ver meu resultado →' : 'Continuar →';
     topo();
-    var primeiro = document.querySelector('.step.is-active input, .step.is-active select');
+    var primeiro = raiz.querySelector('.step.is-active input, .step.is-active select');
     if (primeiro) try { primeiro.focus({ preventScroll: true }); } catch (e) {}
     track('calc_form_step', { calc_step: n + 1 });
   }
@@ -574,8 +588,8 @@
     checar('cliente', !!d.cli);
 
     if (!ok) {
-      var alvo = primeiroErro === 'custo' ? document.querySelector('input[name="custo"]')
-        : primeiroErro === 'cliente' ? document.querySelector('input[name="cliente"]')
+      var alvo = primeiroErro === 'custo' ? raiz.querySelector('input[name="custo"]')
+        : primeiroErro === 'cliente' ? raiz.querySelector('input[name="cliente"]')
         : $(primeiroErro);
       alvo.focus();
     }
@@ -587,13 +601,13 @@
       p: lerInteiro($('pessoas')),
       h: lerInteiro($('horas')),
       r: lerInteiro($('retrabalho')),
-      c: document.querySelector('input[name="custo"]:checked'),
+      c: raiz.querySelector('input[name="custo"]:checked'),
       nome: $('nome').value.trim().replace(/\s+/g, ' '),
       email: $('email').value.trim().toLowerCase(),
       tel: $('telefone').value.replace(/\D/g, ''),
       area: $('area').value,
       cargo: $('cargo').value,
-      cli: document.querySelector('input[name="cliente"]:checked')
+      cli: raiz.querySelector('input[name="cliente"]:checked')
     };
   }
 
@@ -618,11 +632,11 @@
   }
 
   /* ================= CONTEXTO: UTMs e GA client id ================= */
-  // Dentro do embed do Framer a calculadora roda num iframe, então a URL e os cookies
-  // dela não são os da LP. Por isso juntamos três fontes:
-  //  1) a própria URL do iframe (se a LP repassar a query string no src);
-  //  2) uma mensagem 'caju-calc-context' enviada pela LP (snippet do README);
-  //  3) o cookie _ga, quando a calculadora roda direto na página (sem iframe).
+  // O código colado no Embed do Framer pode rodar de três jeitos, e cobrimos todos:
+  //  1) direto na página da LP: lê a URL e o cookie da própria página;
+  //  2) num quadro (iframe) com o mesmo endereço da LP: lê a URL e o cookie da LP pelo quadro pai;
+  //  3) num quadro isolado (sandbox), que não enxerga a LP: recebe os dados pela mensagem
+  //     'caju-calc-context', enviada pelo Custom Code (framer-snippet.html).
   var contexto = { utms: {}, gaClientId: '', pageUrl: '' };
 
   function utmsDe(search) {
@@ -634,15 +648,31 @@
     } catch (e) {}
     return out;
   }
-  function gaDoCookie() {
-    var m = document.cookie.match(/(?:^|;\s*)_ga=([^;]+)/);
-    if (!m) return '';
-    var partes = decodeURIComponent(m[1]).split('.');
-    return partes.length >= 4 ? partes.slice(-2).join('.') : '';
+  function gaDoCookie(doc) {
+    try {
+      var m = doc.cookie.match(/(?:^|;\s*)_ga=([^;]+)/);
+      if (!m) return '';
+      var partes = decodeURIComponent(m[1]).split('.');
+      return partes.length >= 4 ? partes.slice(-2).join('.') : '';
+    } catch (e) { return ''; } // quadro isolado: sem acesso a cookies
   }
-  contexto.utms = utmsDe(location.search);
-  contexto.gaClientId = gaDoCookie();
-  if (window.parent === window) contexto.pageUrl = location.href;
+  // Procura, de fora para dentro, a primeira janela acessível que seja uma página de verdade (http/https).
+  (function lerContextoDireto() {
+    var janelas = [];
+    try { janelas.push(window.top); } catch (e) {}
+    try { janelas.push(window.parent); } catch (e) {}
+    janelas.push(window);
+    for (var i = 0; i < janelas.length; i++) {
+      try {
+        var w = janelas[i];
+        if (!/^https?:$/.test(w.location.protocol)) continue; // ex.: about:srcdoc
+        contexto.utms = utmsDe(w.location.search);
+        contexto.gaClientId = gaDoCookie(w.document);
+        contexto.pageUrl = w.location.href;
+        return;
+      } catch (e) { /* outro domínio: tenta a próxima */ }
+    }
+  })();
 
   window.addEventListener('message', function (e) {
     if (e.source !== window.parent || !e.data || e.data.type !== 'caju-calc-context') return;
@@ -654,6 +684,7 @@
     }
     if (typeof d.gaClientId === 'string' && d.gaClientId) contexto.gaClientId = d.gaClientId.slice(0, 100);
     if (typeof d.pageUrl === 'string' && d.pageUrl) contexto.pageUrl = d.pageUrl.slice(0, 1000);
+    paiResponde = true;
   });
   function pedirContexto() {
     if (window.parent === window) return;
@@ -824,7 +855,12 @@
     doc.setTextColor(138, 127, 120); doc.setFontSize(8);
     doc.text('Gerado em ' + new Date().toLocaleDateString('pt-BR') + '  •  Caju  •  Calculadora do Custo Invisível', M, 287);
 
-    doc.save('custo-invisivel-despesas-caju.pdf');
+    if (isolado && paiResponde) {
+      // Num quadro isolado o download pode ser bloqueado: quem baixa é a LP (Custom Code).
+      window.parent.postMessage({ type: 'caju-calc-pdf', pdf: doc.output('blob') }, '*');
+    } else {
+      doc.save('custo-invisivel-despesas-caju.pdf');
+    }
     track('calc_download_pdf', { calc_total: r.total });
   }
 
@@ -838,7 +874,7 @@
   ['area', 'cargo'].forEach(function (id) {
     $(id).addEventListener('change', function () { setErro('f-' + id, false); });
   });
-  document.querySelectorAll('input[name="cliente"]').forEach(function (el) {
+  raiz.querySelectorAll('input[name="cliente"]').forEach(function (el) {
     el.addEventListener('change', function () { setErro('f-cliente', false); });
   });
   $('btn-start').addEventListener('click', function () { pedirContexto(); show('screen-form'); irParaEtapa(0); });
@@ -861,7 +897,7 @@
   ['pessoas', 'horas', 'retrabalho'].forEach(function (id) {
     $(id).addEventListener('input', function () { setErro('f-' + id, false); });
   });
-  document.querySelectorAll('input[name="custo"]').forEach(function (el) {
+  raiz.querySelectorAll('input[name="custo"]').forEach(function (el) {
     el.addEventListener('change', function () { setErro('f-custo', false); });
   });
 

@@ -1,25 +1,28 @@
 <!--
   Cole este código no Framer, na página da LP: Page Settings → Custom Code → "End of <body> tag".
-  Use junto com um Embed comum (modo URL) apontando para a calculadora.
+  Não precisa alterar nada nele.
 
-  O que ele faz: a calculadora roda dentro de um iframe e não enxerga a URL nem os
-  cookies da LP. Este script lê as UTMs da URL da LP e o client id do Google Analytics
-  (cookie _ga) e entrega para a calculadora quando ela pedir.
+  Para que serve: dependendo de como o Framer roda o HTML colado no Embed, a calculadora
+  pode ficar num quadro isolado que não enxerga a URL nem os cookies da LP. Este script lê
+  as UTMs da URL da LP e o client id do Google Analytics (cookie _ga) e entrega para a
+  calculadora quando ela pedir. Se a calculadora conseguir ler esses dados sozinha,
+  o script simplesmente não é usado. Mantê-lo instalado não causa problema.
 
-  ANTES DE PUBLICAR: troque CALC_ORIGIN pelo endereço onde a calculadora estiver
-  hospedada (só protocolo + domínio, sem barra no final). Ex.: https://calculadora-despesas-caju.vercel.app
+  Também faz o download do PDF do resultado quando o quadro não tem permissão para isso.
+
+  Só responde a quadros (iframes) que estão nesta página, e só envia UTMs, client id do GA
+  e a URL da página. Nenhum dado pessoal.
 -->
 <script>
 (function () {
-  var CALC_ORIGIN = 'https://SEU-DOMINIO-DA-CALCULADORA';
   var KEY = 'caju_calc_utms';
 
   // UTMs da URL atual; se a pessoa navegou e a URL não tem mais UTMs, usa as da entrada.
   var utms = {};
-  new URLSearchParams(location.search).forEach(function (v, k) {
-    if (/^utm_/i.test(k) && v) utms[k.toLowerCase()] = v;
-  });
   try {
+    new URLSearchParams(location.search).forEach(function (v, k) {
+      if (/^utm_/i.test(k) && v) utms[k.toLowerCase()] = v;
+    });
     if (Object.keys(utms).length) sessionStorage.setItem(KEY, JSON.stringify(utms));
     else utms = JSON.parse(sessionStorage.getItem(KEY) || '{}');
   } catch (e) {}
@@ -31,14 +34,38 @@
     return p.length >= 4 ? p.slice(-2).join('.') : '';
   }
 
+  function ehQuadroDaPagina(win) {
+    var frames = document.getElementsByTagName('iframe');
+    for (var i = 0; i < frames.length; i++) {
+      if (frames[i].contentWindow === win) return true;
+    }
+    return false;
+  }
+
+  // Download do PDF feito pela LP, para o caso de o quadro não ter permissão de download.
+  function baixarPdf(blob) {
+    if (!(blob instanceof Blob) || blob.type !== 'application/pdf' || blob.size > 5 * 1024 * 1024) return;
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'custo-invisivel-despesas-caju.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+  }
+
   window.addEventListener('message', function (e) {
-    if (e.origin !== CALC_ORIGIN || !e.data || e.data.type !== 'caju-calc-ready') return;
+    if (!e.data || !ehQuadroDaPagina(e.source)) return;
+    if (e.data.type === 'caju-calc-pdf') { baixarPdf(e.data.pdf); return; }
+    if (e.data.type !== 'caju-calc-ready') return;
+    // '*' porque o quadro do Embed pode não ter endereço próprio (origem "null").
     e.source.postMessage({
       type: 'caju-calc-context',
       utms: utms,
       gaClientId: gaClientId(),
       pageUrl: location.href
-    }, CALC_ORIGIN);
+    }, '*');
   });
 })();
 </script>

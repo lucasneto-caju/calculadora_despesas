@@ -2,7 +2,7 @@
 
 Ferramenta TOFU, num único arquivo (`index.html`), para embed em uma LP no Framer.
 Fluxo: **Tela inicial → 4 perguntas (uma por tela) → Seus dados (2 telas) → Resultado** (com download em PDF e CTA para Gestão de Despesas).
-Cada etapa é curta para caber num embed pequeno, de tamanho fixo.
+Cada etapa é curta para caber num embed pequeno, de tamanho fixo. O código é colado direto no Embed (modo HTML) do Framer.
 
 ## Fórmula
 
@@ -52,22 +52,34 @@ O mesmo cálculo não é enviado duas vezes seguidas. Os dados pessoais **não**
 
 ## Como colocar no Framer
 
-### 1. Embed
-1. Publicar o `index.html` numa URL pública (ex.: Vercel).
-2. No Framer, inserir um **Embed**, modo **URL**, com essa URL.
-3. Tamanho do quadro: **pelo menos 360 × 600 px** (largura × altura). Nesse tamanho, todas as telas cabem sem rolagem.
+A calculadora **não precisa ser publicada em outro lugar**: o código do `index.html` é colado direto no Embed.
+
+### 1. Embed (modo HTML)
+1. No Framer, inserir um **Embed** e escolher o modo **HTML**.
+2. Colar **todo** o conteúdo do `index.html`.
+3. Tamanho do bloco: **pelo menos 360 × 600 px** (largura × altura). Nesse tamanho, todas as telas cabem sem rolagem.
    Tamanhos testados: 320×560, 360×640, 400×600, 600×600 e 800×700. Em 320×560, duas telas (dados 2 e resultado)
-   rolam um pouco dentro do quadro, mas funcionam.
+   rolam um pouco dentro do bloco, mas funcionam.
 
-### 2. Custom Code (obrigatório para UTMs e GA client id)
-No embed, a calculadora roda num iframe e **não enxerga a URL nem os cookies da LP**. O `framer-snippet.html` resolve isso:
-ele lê as UTMs da URL da LP e o client id do GA (cookie `_ga`) e entrega para a calculadora.
+### 2. Custom Code (`framer-snippet.html`)
+Não consegui confirmar na documentação do Framer como ele roda o HTML colado (o site do Framer estava inacessível
+no ambiente de desenvolvimento). Por isso a calculadora foi preparada e testada para os três jeitos possíveis:
 
-1. Abrir `framer-snippet.html` e trocar `CALC_ORIGIN` pelo domínio da calculadora
-   (só `https://dominio`, sem barra e sem caminho no final. Ex.: `https://calculadora-despesas-caju.vercel.app`).
-2. No Framer: Page Settings da LP → Custom Code → **End of `<body>` tag** → colar o conteúdo do arquivo.
+| Como o Framer roda o código | UTMs e GA client id | Download do PDF |
+|---|---|---|
+| Direto na página da LP | lidos direto da LP | normal |
+| Quadro (iframe) com o mesmo endereço da LP | lidos direto da LP | normal |
+| Quadro isolado (sandbox) | **só com o Custom Code** | pelo Custom Code, se o quadro não puder baixar |
 
-Sem este passo, as UTMs e o `ga_client_id` chegam vazios no Zapier (o resto funciona normalmente).
+Por isso, **instale sempre o Custom Code**: nos dois primeiros casos ele não é usado e não atrapalha.
+No Framer: Page Settings da LP → Custom Code → **End of `<body>` tag** → colar o conteúdo do `framer-snippet.html`.
+Não é preciso alterar nada nele.
+
+### Isolamento do estilo
+Todo o CSS vale só dentro de `#caju-calc`, para não alterar a LP, e o layout se adapta à **largura do próprio bloco**
+(container queries), não à da janela. Risco residual, só se o Framer injetar o código direto na página: uma regra
+genérica da LP (ex.: `.btn`, `.card`) poderia afetar a calculadora. O Framer usa classes próprias (`framer-...`),
+então é improvável.
 
 ## Eventos emitidos (para tagueamento)
 
